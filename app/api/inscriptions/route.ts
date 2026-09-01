@@ -115,16 +115,16 @@ export async function POST(request: NextRequest) {
         : formData.nombre_completo;
 
     await resend.emails.send({
-      from: 'clan-maya@clanmayag1.com',
+      from: 'onboarding@resend.dev', // Ajustar al dominio verificado en Resend
       to: user.email!,
-      subject: `✅ Inscripción Registrada - Clan Maya G1 ${inscriptionYear}`,
+      subject: `✅ Inscripción Registrada - Grupo Scout No. 1 ${inscriptionYear}`,
       html: `
         <html>
           <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
               <h2>¡Bienvenida/o, ${nombrePersona}!</h2>
               
-              <p>Tu inscripción ha sido registrada exitosamente en Clan Maya G1 "Los Intrépidos".</p>
+              <p>Tu inscripción ha sido registrada exitosamente en el Grupo Scout No. 1 "Los Intrépidos".</p>
               
               <div style="background: #f0f7ff; padding: 15px; border-radius: 5px; margin: 20px 0;">
                 <p><strong>Tipo de Inscripción:</strong> ${tipoNombre}</p>
@@ -137,16 +137,16 @@ export async function POST(request: NextRequest) {
               
               <p>Si tienes dudas, puedes contactar a:</p>
               <p>
-                📧 <strong>Email:</strong> clan.maya.g1@gmail.com<br>
+                📧 <strong>Email:</strong> gruposcout1.losintrepidos@gmail.com<br>
                 📱 <strong>WhatsApp:</strong> +503 XXXX-XXXX
               </p>
               
               <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
               
               <p style="font-size: 12px; color: #666; text-align: center;">
-                Grupo Scout No. 1 "Los Intrépidos" - Clan Maya G1<br>
+                Grupo Scout No. 1 "Los Intrépidos"<br>
                 Escuela Americana, San Salvador, El Salvador<br>
-                <a href="https://www.scouts.org" style="color: #0066cc;">Movimiento Scout</a>
+                <!--a href="https://www.scouts.org" style="color: #0066cc;">Movimiento Scout</a-->
               </p>
             </div>
           </body>

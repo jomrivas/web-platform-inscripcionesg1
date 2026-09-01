@@ -150,7 +150,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6 text-gray-900">
-        Ficha de Adultos Voluntarios - Clan Maya G1
+        Ficha de Adultos Voluntarios - Grupo Scout No. 1 "Los Intrépidos"
       </h1>
 
       {/* Tabs */}
