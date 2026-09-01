@@ -1,6 +1,3 @@
----
-
-```markdown
 # Sistema de Inscripciones - Grupo Scout No. 1 "Los Intrépidos"
 
 Plataforma web para la gestión digital de fichas de inscripción de adultos 
@@ -41,9 +38,8 @@ inscripción ordinario: marzo-abril).
 - **Autenticación:** Supabase Auth
 - **Email transaccional:** Resend
 - **Hosting:** Vercel
-```
 
----
+```
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
