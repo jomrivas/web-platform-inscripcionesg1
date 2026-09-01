@@ -47,7 +47,7 @@ export default async function MisInscripcionesPage({
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Mis Inscripciones</h2>
         <a
-          href="/app/nuevo-formulario"
+          href="/dashboard/nuevo-formulario"
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
         >
           + Nueva Inscripción

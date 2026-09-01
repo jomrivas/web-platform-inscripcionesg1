@@ -9,7 +9,7 @@ export default function HomePage() {
           Grupo Scout No. 1 "Los Intrépidos"
         </h1>
         <p className="text-lg text-gray-600 mb-8">
-          Clan Maya G1 - Plataforma de Inscripciones
+          Sistema de Inscripciones
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -11,7 +11,7 @@ export default function SeleccionarTipoFormularioPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <a
-          href="/app/nuevo-formulario/beneficiario"
+          href="/dashboard/nuevo-formulario/beneficiario"
           className="bg-white border-2 border-purple-200 hover:border-purple-500 rounded-xl p-8 text-center transition-colors shadow-sm hover:shadow-md"
         >
           <div className="text-5xl mb-4">🧑‍🎓</div>
@@ -24,7 +24,7 @@ export default function SeleccionarTipoFormularioPage() {
         </a>
 
         <a
-          href="/app/nuevo-formulario/adulto"
+          href="/dashboard/nuevo-formulario/adulto"
           className="bg-white border-2 border-orange-200 hover:border-orange-500 rounded-xl p-8 text-center transition-colors shadow-sm hover:shadow-md"
         >
           <div className="text-5xl mb-4">🧑‍🏫</div>

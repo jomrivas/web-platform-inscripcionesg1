@@ -1,12 +1,12 @@
-// app/app/nuevo-formulario/beneficiario/page.tsx
+// app/app/nuevo-formulario/adulto/page.tsx
 'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
-import FormularioBeneficiario from '@/components/FormularioBeneficiario';
+import FormularioAdulto from '@/components/FormularioAdulto';
 
-export default function NuevoFormularioBeneficiarioPage() {
+export default function NuevoFormularioAdultoPage() {
   const router = useRouter();
   const supabase = createClient();
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +30,7 @@ export default function NuevoFormularioBeneficiarioPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'beneficiario',
+          type: 'adulto',
           formData,
           userId: user.id,
         }),
@@ -42,7 +42,7 @@ export default function NuevoFormularioBeneficiarioPage() {
         throw new Error(result.error || 'Error al enviar el formulario');
       }
 
-      router.push('/app/mis-inscripciones?success=true');
+      router.push('/dashboard/mis-inscripciones?success=true');
     } catch (error: any) {
       setSubmitError(error.message || 'Ocurrió un error inesperado');
     } finally {
@@ -57,7 +57,7 @@ export default function NuevoFormularioBeneficiarioPage() {
           {submitError}
         </div>
       )}
-      <FormularioBeneficiario onSubmit={handleSubmit} isLoading={isLoading} />
+      <FormularioAdulto onSubmit={handleSubmit} isLoading={isLoading} />
     </div>
   );
 }

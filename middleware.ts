@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
   // Si hay usuario y trata de ir a login/signup → redirigir a dashboard
   if (user && (path === '/login' || path === '/signup')) {
     const url = request.nextUrl.clone();
-    url.pathname = '/app';
+    url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
 
@@ -62,7 +62,7 @@ export async function middleware(request: NextRequest) {
 
     if (!roleData || roleData.role !== 'admin') {
       const url = request.nextUrl.clone();
-      url.pathname = '/app';
+      url.pathname = '/dashboard';
       return NextResponse.redirect(url);
     }
   }

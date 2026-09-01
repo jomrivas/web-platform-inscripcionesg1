@@ -3,8 +3,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Clan Maya G1 - Inscripciones',
-  description: 'Plataforma de inscripciones - Grupo Scout No. 1 "Los Intrépidos"',
+  title: 'Grupo Scout No. 1 "Los Intrépidos" - Inscripciones',
+  description:
+    'Plataforma de inscripciones - Grupo Scout No. 1 "Los Intrépidos" (Manada, Scouts, Caminantes y Clan Maya/Rovers)',
 };
 
 export default function RootLayout({

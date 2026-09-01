@@ -23,7 +23,7 @@ export default async function AdminLayout({
     .single();
 
   if (!roleData || roleData.role !== 'admin') {
-    redirect('/app');
+    redirect('/dashboard');
   }
 
   return (
@@ -43,7 +43,7 @@ export default async function AdminLayout({
             <a href="/admin/listados" className="hover:text-blue-400">
               Listados
             </a>
-            <a href="/app" className="hover:text-blue-400">
+            <a href="/dashboard" className="hover:text-blue-400">
               Vista Usuario
             </a>
             <LogoutButton />
