@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* La app está diseñada solo en modo claro: evita que el navegador
+     oscurezca controles nativos (date picker, scrollbars, etc.) */
+  color-scheme: light;
 }
 
 @theme inline {
@@ -12,15 +15,27 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Diseño solo claro: se ignora el modo oscuro del SO para que
+   el fondo y el texto nunca se inviertan bajo los contenedores. */
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Los inputs heredaban el color del body, que en modo oscuro del SO
+   es casi blanco → texto invisible sobre fondo blanco del input.
+   Se fija color oscuro explícito en todos los controles de formulario. */
+input,
+textarea,
+select {
+  color: #171717;
+  background-color: #ffffff;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af;
+  opacity: 1;
 }
