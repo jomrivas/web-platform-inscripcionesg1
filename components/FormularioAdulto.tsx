@@ -96,6 +96,8 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
       newErrors.fecha_nacimiento = 'La fecha de nacimiento es requerida';
     if (!formData.telefono_celular.trim())
       newErrors.telefono_celular = 'El teléfono es requerido';
+    if (!formData.firma_responsable_grupo?.trim())
+      newErrors.firma = 'La firma es obligatoria';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -445,8 +447,14 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
         <div className="mb-6">
           <SignaturePad
             onSignatureCapture={handleSignatureCapture}
-            label="Firma del Adulto"
+            label="Firma del Adulto *"
+            error={errors.firma}
           />
+          {formData.firma_responsable_grupo && (
+            <p className="text-green-600 text-sm mt-2">
+              ✓ Firma capturada correctamente
+            </p>
+          )}
         </div>
       )}
 

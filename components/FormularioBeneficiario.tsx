@@ -82,6 +82,12 @@ const FormularioBeneficiario: React.FC<FormularioBeneficiarioProps> = ({
       newErrors.direccion = 'La dirección es requerida';
     if (!formData.madre_nombre?.trim() && !formData.padre_nombre?.trim())
       newErrors.tutor = 'Debes ingresar al menos un tutor (madre o padre)';
+    if (
+      !formData.firma_padre_tutor?.trim() &&
+      !formData.firma_madre_tutora?.trim()
+    )
+      newErrors.firma =
+        'Se requiere al menos una firma de tutor (padre o madre)';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -529,8 +535,13 @@ const FormularioBeneficiario: React.FC<FormularioBeneficiarioProps> = ({
       {/* Tab: Firmas */}
       {activeTab === 'firma' && (
         <div className="space-y-6 mb-6">
+          {errors.firma && (
+            <p className="text-red-500 text-sm bg-red-50 border border-red-200 px-3 py-2 rounded">
+              {errors.firma}
+            </p>
+          )}
           <SignaturePad
-            label="Firma de Padre o Tutor"
+            label="Firma de Padre o Tutor *"
             onSignatureCapture={(data, type) =>
               setFormData((prev) => ({
                 ...prev,

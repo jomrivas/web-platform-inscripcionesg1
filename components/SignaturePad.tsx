@@ -39,7 +39,20 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
   }, [mode]);
 
-  // Manejo de dibujo en canvas
+  const getCanvasPos = (
+    canvas: HTMLCanvasElement,
+    clientX: number,
+    clientY: number
+  ) => {
+    const rect = canvas.getBoundingClientRect();
+    // Escala coordenadas CSS → coordenadas internas del canvas (500x200)
+    return {
+      x: ((clientX - rect.left) / rect.width) * canvas.width,
+      y: ((clientY - rect.top) / rect.height) * canvas.height,
+    };
+  };
+
+  // Manejo de dibujo en canvas (mouse + táctil)
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (mode !== 'canvas') return;
 
@@ -49,9 +62,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const { x, y } = getCanvasPos(canvas, e.clientX, e.clientY);
 
     setIsDrawing(true);
     ctx.beginPath();
@@ -67,9 +78,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const { x, y } = getCanvasPos(canvas, e.clientX, e.clientY);
 
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
@@ -78,6 +87,38 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     ctx.lineTo(x, y);
     ctx.stroke();
 
+    setIsEmpty(false);
+  };
+
+  const startTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (mode !== 'canvas') return;
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const touch = e.touches[0];
+    const { x, y } = getCanvasPos(canvas, touch.clientX, touch.clientY);
+    setIsDrawing(true);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const drawTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || mode !== 'canvas') return;
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const touch = e.touches[0];
+    const { x, y } = getCanvasPos(canvas, touch.clientX, touch.clientY);
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#000';
+    ctx.lineTo(x, y);
+    ctx.stroke();
     setIsEmpty(false);
   };
 
@@ -171,7 +212,10 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
-            className="border-2 border-gray-300 rounded cursor-crosshair bg-white w-full"
+            onTouchStart={startTouch}
+            onTouchMove={drawTouch}
+            onTouchEnd={stopDrawing}
+            className="border-2 border-gray-300 rounded cursor-crosshair bg-white w-full touch-none"
             style={{ maxWidth: '100%', height: 'auto' }}
           />
           <div className="flex gap-2 mt-3">

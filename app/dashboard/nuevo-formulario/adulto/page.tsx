@@ -26,13 +26,13 @@ export default function NuevoFormularioAdultoPage() {
         return;
       }
 
+      void user;
       const response = await fetch('/api/inscriptions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'adulto',
           formData,
-          userId: user.id,
         }),
       });
 

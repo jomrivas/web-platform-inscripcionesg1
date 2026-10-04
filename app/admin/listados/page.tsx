@@ -68,6 +68,34 @@ export default function ListadosAdminPage() {
     );
   });
 
+  const handleStatusChange = async (
+    id: string,
+    status: 'submitted' | 'rejected' | 'draft'
+  ) => {
+    let rejection_reason: string | undefined;
+    if (status === 'rejected') {
+      const input = prompt('Motivo del rechazo:');
+      if (!input?.trim()) return;
+      rejection_reason = input.trim();
+    }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const response = await fetch(`/api/inscriptions/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.access_token}`,
+      },
+      body: JSON.stringify({ status, rejection_reason }),
+    });
+    if (!response.ok) {
+      alert('Error al actualizar estado');
+      return;
+    }
+    await loadData();
+  };
+
   const handleExport = async (format: string) => {
     const {
       data: { session },
@@ -95,7 +123,9 @@ export default function ListadosAdminPage() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `clan-maya-export.${format === 'excel' ? 'csv' : format === 'pdf' ? 'html' : format}`;
+    const ext =
+      format === 'excel' ? 'xlsx' : format === 'pdf' ? 'pdf' : format;
+    a.download = `gs1-inscripciones-${filterYear}.${ext}`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -118,8 +148,14 @@ export default function ListadosAdminPage() {
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
           >
             <option value="all">Todos</option>
-            <option value="2026">2026</option>
-            <option value="2025">2025</option>
+            {Array.from(
+              { length: 4 },
+              (_, i) => new Date().getFullYear() - i
+            ).map((y) => (
+              <option key={y} value={String(y)}>
+                {y}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -210,6 +246,7 @@ export default function ListadosAdminPage() {
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Tipo</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Año</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Estado</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -223,11 +260,28 @@ export default function ListadosAdminPage() {
                   </td>
                   <td className="px-4 py-3">{row.inscription_year}</td>
                   <td className="px-4 py-3">{row.status}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {row.status !== 'rejected' ? (
+                      <button
+                        onClick={() => handleStatusChange(row.id, 'rejected')}
+                        className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 mr-2"
+                      >
+                        Rechazar
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleStatusChange(row.id, 'submitted')}
+                        className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
+                      >
+                        Reabrir
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
               {filteredRows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-gray-500">
+                  <td colSpan={7} className="text-center py-8 text-gray-500">
                     No hay registros con estos filtros
                   </td>
                 </tr>
