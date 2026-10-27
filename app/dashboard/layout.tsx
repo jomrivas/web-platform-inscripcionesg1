@@ -35,7 +35,7 @@ export default async function DashboardLayout({
         <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
           <div>
             <h1 className="font-bold text-gray-900">
-              Grupo Scout No. 1 "Los Intrépidos"
+              Grupo Scout No. 1 &quot;Los Intrépidos&quot;
             </h1>
             <p className="text-xs text-gray-500">{user.email}</p>
           </div>

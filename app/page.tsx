@@ -1,12 +1,17 @@
 // app/page.tsx
 import React from 'react';
+import bgLogin from '@/bg_login_wpg1.jpeg';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100 px-4">
-      <div className="max-w-lg w-full text-center">
+    <div
+      className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat px-4"
+      style={{ backgroundImage: `url(${bgLogin.src})` }}
+    >
+      <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
+      <div className="relative z-10 max-w-lg w-full bg-white p-8 rounded-lg shadow-md text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Grupo Scout No. 1 "Los Intrépidos"
+          Grupo Scout No. 1 &quot;Los Intrépidos&quot;
         </h1>
         <p className="text-lg text-gray-600 mb-8">
           Sistema de Inscripciones

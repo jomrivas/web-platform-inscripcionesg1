@@ -109,8 +109,15 @@ export async function POST(request: NextRequest) {
     if (formError) {
       // Rollback: eliminar inscripción huérfana
       await supabase.from('inscriptions').delete().eq('id', inscriptionId);
+      console.error(
+        `Error al guardar formulario ${type} (${table}):`,
+        formError
+      );
       return NextResponse.json(
-        { error: `Error al guardar formulario ${type}` },
+        {
+          error: `Error al guardar formulario ${type}`,
+          detail: formError.message,
+        },
         { status: 500 }
       );
     }

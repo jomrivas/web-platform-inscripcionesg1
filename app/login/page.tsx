@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
+import bgLogin from '@/bg_login_wpg1.jpeg';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,14 +20,13 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    setLoading(false);
-
     if (signInError) {
+      setLoading(false);
       setError(
         signInError.message === 'Invalid login credentials'
           ? 'Correo o contraseña incorrectos'
@@ -35,16 +35,32 @@ export default function LoginPage() {
       return;
     }
 
-    router.push('/dashboard');
+    // Los administradores aterrizan directo en su dashboard
+    let destination = '/dashboard';
+    if (data.user) {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .single();
+      if (roleData?.role === 'admin') destination = '/admin';
+    }
+
+    setLoading(false);
+    router.push(destination);
     router.refresh();
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
+    <div
+      className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat px-4"
+      style={{ backgroundImage: `url(${bgLogin.src})` }}
+    >
+      <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
+      <div className="relative z-10 max-w-md w-full bg-white p-8 rounded-lg shadow-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">
-            Grupo Scout No. 1 "Los Intrépidos"
+            Grupo Scout No. 1 &quot;Los Intrépidos&quot;
           </h1>
           <p className="text-gray-600 mt-2">Sistema de Inscripciones</p>
         </div>
@@ -56,10 +72,12 @@ export default function LoginPage() {
             </label>
             <input
               type="email"
+              name="email"
+              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
               placeholder="tu@correo.com"
             />
           </div>
@@ -70,10 +88,12 @@ export default function LoginPage() {
             </label>
             <input
               type="password"
+              name="password"
+              autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
               placeholder="••••••••"
             />
           </div>

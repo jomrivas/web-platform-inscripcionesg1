@@ -2,11 +2,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
+import bgLogin from '@/bg_login_wpg1.jpeg';
 
 export default function SignupPage() {
-  const router = useRouter();
   const supabase = createClient();
 
   const [email, setEmail] = useState('');
@@ -52,8 +51,12 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md text-center">
+      <div
+        className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat px-4"
+        style={{ backgroundImage: `url(${bgLogin.src})` }}
+      >
+        <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
+        <div className="relative z-10 max-w-md w-full bg-white p-8 rounded-lg shadow-md text-center">
           <div className="text-5xl mb-4">✅</div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">
             ¡Cuenta creada!
@@ -73,12 +76,16 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
+    <div
+      className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat px-4"
+      style={{ backgroundImage: `url(${bgLogin.src})` }}
+    >
+      <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
+      <div className="relative z-10 max-w-md w-full bg-white p-8 rounded-lg shadow-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Crear Cuenta</h1>
           <p className="text-gray-600 mt-2">
-            Grupo Scout No. 1 "Los Intrépidos" - Inscripciones
+            Grupo Scout No. 1 &quot;Los Intrépidos&quot; - Inscripciones
           </p>
         </div>
 
@@ -89,10 +96,12 @@ export default function SignupPage() {
             </label>
             <input
               type="email"
+              name="email"
+              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
               placeholder="tu@correo.com"
             />
           </div>
@@ -103,10 +112,12 @@ export default function SignupPage() {
             </label>
             <input
               type="password"
+              name="new-password"
+              autoComplete="new-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
               placeholder="Mínimo 6 caracteres"
             />
           </div>
@@ -117,10 +128,12 @@ export default function SignupPage() {
             </label>
             <input
               type="password"
+              name="confirm-password"
+              autoComplete="new-password"
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
               placeholder="••••••••"
             />
           </div>

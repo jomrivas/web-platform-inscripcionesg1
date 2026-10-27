@@ -4,7 +4,9 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
-import FormularioBeneficiario from '@/components/FormularioBeneficiario';
+import FormularioBeneficiario, {
+  type FormDataBeneficiario,
+} from '@/components/FormularioBeneficiario';
 
 export default function NuevoFormularioBeneficiarioPage() {
   const router = useRouter();
@@ -12,7 +14,7 @@ export default function NuevoFormularioBeneficiarioPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: FormDataBeneficiario) => {
     setIsLoading(true);
     setSubmitError('');
 
@@ -43,8 +45,10 @@ export default function NuevoFormularioBeneficiarioPage() {
       }
 
       router.push('/dashboard/mis-inscripciones?success=true');
-    } catch (error: any) {
-      setSubmitError(error.message || 'Ocurrió un error inesperado');
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : 'Ocurrió un error inesperado'
+      );
     } finally {
       setIsLoading(false);
     }

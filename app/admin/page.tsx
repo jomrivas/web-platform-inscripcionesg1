@@ -17,12 +17,15 @@ export default async function AdminDashboardPage() {
     inscriptions?.filter((i) => i.type === 'beneficiario').length || 0;
   const pendientes =
     inscriptions?.filter((i) => i.status === 'submitted').length || 0;
+  const aprobados =
+    inscriptions?.filter((i) => i.status === 'approved').length || 0;
 
   const cards = [
     { label: 'Total Inscripciones', value: total, color: 'bg-blue-50 text-blue-700' },
     { label: 'Adultos Voluntarios', value: adultos, color: 'bg-orange-50 text-orange-700' },
     { label: 'Beneficiarios', value: beneficiarios, color: 'bg-purple-50 text-purple-700' },
     { label: 'Pendientes de Revisión', value: pendientes, color: 'bg-yellow-50 text-yellow-700' },
+    { label: 'Aprobados', value: aprobados, color: 'bg-green-50 text-green-700' },
   ];
 
   return (

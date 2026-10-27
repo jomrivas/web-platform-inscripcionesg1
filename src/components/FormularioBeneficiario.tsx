@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import SignaturePad from './SignaturePad';
 
-interface FormDataBeneficiario {
+export interface FormDataBeneficiario {
   rama_inscripcion: string;
   fecha_llenado_ficha?: string;
   nombre_completo: string;
@@ -90,6 +90,19 @@ const FormularioBeneficiario: React.FC<FormularioBeneficiarioProps> = ({
         'Se requiere al menos una firma de tutor (padre o madre)';
 
     setErrors(newErrors);
+
+    // Como el botón de envío solo vive en "Firmas", llevamos al usuario
+    // a la pestaña del primer error para que no parezca que no pasa nada.
+    const tabDeErrores: Array<[string, string[]]> = [
+      ['personales', ['nombre_completo', 'fecha_nacimiento', 'direccion']],
+      ['tutores', ['tutor']],
+      ['firma', ['firma']],
+    ];
+    const primeraTab = tabDeErrores.find(([, claves]) =>
+      claves.some((k) => newErrors[k])
+    )?.[0];
+    if (primeraTab) setActiveTab(primeraTab);
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -563,15 +576,19 @@ const FormularioBeneficiario: React.FC<FormularioBeneficiarioProps> = ({
         </div>
       )}
 
-      <div className="flex gap-4 mt-8">
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium"
-        >
-          {isLoading ? 'Enviando...' : 'Enviar Formulario'}
-        </button>
-      </div>
+      {/* Botones: solo visibles en la pestaña de Firmas para evitar
+          que se envíe el formulario sin completar el resto */}
+      {activeTab === 'firma' && (
+        <div className="flex gap-4 mt-8">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium"
+          >
+            {isLoading ? 'Enviando...' : 'Enviar Formulario'}
+          </button>
+        </div>
+      )}
 
       {errors.submit && <p className="text-red-500 mt-4">{errors.submit}</p>}
     </form>

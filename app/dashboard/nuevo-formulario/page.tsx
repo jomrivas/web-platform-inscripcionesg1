@@ -19,7 +19,7 @@ export default function SeleccionarTipoFormularioPage() {
             Beneficiario
           </h3>
           <p className="text-gray-600 text-sm">
-            Manada, Scouts, Caminantes o Rovers (7 a 21 años)
+            Manada, Scouts, Caminantes o Rovers (7 a 22 años)
           </p>
         </a>
 

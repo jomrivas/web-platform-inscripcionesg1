@@ -15,14 +15,12 @@ async function requireAdmin(request: NextRequest) {
     : null;
   if (!token) return null;
 
-  // Valida el JWT contra Supabase Auth
   const userClient = createClient(supabaseUrl, anonKey);
   const {
     data: { user },
   } = await userClient.auth.getUser(token);
   if (!user) return null;
 
-  // Verifica rol admin con service_role (server-only)
   const adminDb = createClient(supabaseUrl, serviceKey);
   const { data: roleData } = await adminDb
     .from('user_roles')
@@ -33,8 +31,9 @@ async function requireAdmin(request: NextRequest) {
   return user;
 }
 
-// Función para convertir array a CSV
-function convertToCSV(data: Record<string, unknown>[]): string {
+type FlatRow = Record<string, unknown>;
+
+function convertToCSV(data: FlatRow[]): string {
   if (data.length === 0) return '';
 
   const headers = Object.keys(data[0]);
@@ -59,7 +58,7 @@ function convertToCSV(data: Record<string, unknown>[]): string {
   return [csvHeaders, ...csvRows].join('\n');
 }
 
-async function generateExcelXLSX(data: Record<string, unknown>[]): Promise<Buffer> {
+async function generateExcelXLSX(data: FlatRow[]): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Grupo Scout No. 1 "Los Intrépidos"';
   const sheet = workbook.addWorksheet('Inscripciones');
@@ -73,7 +72,7 @@ async function generateExcelXLSX(data: Record<string, unknown>[]): Promise<Buffe
     }));
     sheet.getRow(1).font = { bold: true };
     for (const row of data) {
-      const flat: Record<string, unknown> = {};
+      const flat: FlatRow = {};
       for (const [k, v] of Object.entries(row)) {
         flat[k] = typeof v === 'object' && v !== null ? JSON.stringify(v) : v;
       }
@@ -84,7 +83,7 @@ async function generateExcelXLSX(data: Record<string, unknown>[]): Promise<Buffe
   return Buffer.from(buf);
 }
 
-async function generatePDF(data: Record<string, unknown>[], title: string): Promise<Buffer> {
+async function generatePDF(data: FlatRow[], title: string): Promise<Buffer> {
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -109,18 +108,16 @@ async function generatePDF(data: Record<string, unknown>[], title: string): Prom
   draw(`Total registros: ${data.length}`);
   y -= 8;
   data.slice(0, 500).forEach((row, idx) => {
-    const r = row as Record<string, unknown>;
-    const nombre = String(r.nombre_completo ?? r.nombre ?? '-');
-    const id = String(r.dui ?? r.dui_numero ?? r.identificacion ?? '-');
-    const email = String(r.email ?? r.madre_email ?? r.email_contacto ?? '-');
-    draw(`${idx + 1}. ${nombre} | ${id} | ${email} | ${String(r.inscription_year ?? '')} | ${String(r.type ?? '')} | ${String(r.status ?? '')}`);
+    draw(
+      `${idx + 1}. ${String(row.nombre ?? '-')} | ${String(row.identificacion ?? '-')} | ${String(row.email_contacto ?? '-')} | ${String(row.rama ?? '-')} | ${String(row.inscription_year ?? '')} | ${String(row.type ?? '')} | ${String(row.status ?? '')}`
+    );
   });
   const bytes = await doc.save();
   return Buffer.from(bytes);
 }
 
 function generateSQLBackup(
-  tables: { name: string; rows: Record<string, unknown>[] }[]
+  tables: { name: string; rows: FlatRow[] }[]
 ): string {
   const lines = [
     `-- Backup Grupo Scout No. 1 "Los Intrépidos"`,
@@ -167,13 +164,19 @@ export async function GET(request: NextRequest) {
     const year = params.get('year') || new Date().getFullYear().toString();
     const status = params.get('status');
 
-    let query = adminDb.from('inscriptions_summary').select('*');
-    if (year && year !== 'all') query = query.eq('inscription_year', parseInt(year));
+    let query = adminDb
+      .from('inscriptions')
+      .select(
+        'id, type, inscription_year, status, created_at, adult_forms (*), beneficiary_forms (*)'
+      )
+      .order('created_at', { ascending: false });
+    if (year && year !== 'all')
+      query = query.eq('inscription_year', parseInt(year));
     if (type && type !== 'all') query = query.eq('type', type);
     if (status && status !== 'all') query = query.eq('status', status);
 
     const { data, error } = (await query) as unknown as {
-      data: Record<string, unknown>[] | null;
+      data: Array<Record<string, unknown>> | null;
       error: { message: string } | null;
     };
 
@@ -191,11 +194,42 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const flat: FlatRow[] = data.map((r) => {
+      const adult = (
+        Array.isArray(r.adult_forms) ? r.adult_forms[0] : r.adult_forms
+      ) as FlatRow | null;
+      const ben = (
+        Array.isArray(r.beneficiary_forms)
+          ? r.beneficiary_forms[0]
+          : r.beneficiary_forms
+      ) as FlatRow | null;
+      const form: FlatRow = { ...(adult || ben || {}) };
+      // Las firmas (base64) no van en tabulares; sí quedan en el backup SQL
+      for (const k of Object.keys(form)) {
+        if (k.startsWith('firma_')) delete form[k];
+      }
+      delete form.id;
+      delete form.inscription_id;
+      delete form.created_at;
+      return {
+        id: r.id,
+        type: r.type,
+        inscription_year: r.inscription_year,
+        status: r.status,
+        nombre: form.nombre_completo ?? '-',
+        identificacion: form.dui ?? form.dui_numero ?? '-',
+        email_contacto:
+          form.email ?? form.madre_email ?? form.padre_email ?? '-',
+        rama: form.rama ?? form.rama_inscripcion ?? '',
+        ...form,
+      };
+    });
+
     const timestamp = new Date().toISOString().split('T')[0];
 
     switch (format) {
       case 'excel': {
-        const buf = await generateExcelXLSX(data);
+        const buf = await generateExcelXLSX(flat);
         return new NextResponse(new Uint8Array(buf), {
           status: 200,
           headers: {
@@ -208,7 +242,7 @@ export async function GET(request: NextRequest) {
 
       case 'pdf': {
         const buf = await generatePDF(
-          data,
+          flat,
           `Inscripciones Grupo Scout No. 1 - Año ${year}`
         );
         return new NextResponse(new Uint8Array(buf), {
@@ -221,10 +255,7 @@ export async function GET(request: NextRequest) {
       }
 
       case 'sql': {
-        // Backup de tablas base (restaurable), no de la vista
-        const ids = data
-          .map((r) => (r as { id?: string }).id)
-          .filter(Boolean) as string[];
+        const ids = data.map((r) => r.id as string);
         const [{ data: insc }, { data: adults }, { data: benefs }] =
           await Promise.all([
             adminDb.from('inscriptions').select('*').in('id', ids),
@@ -235,9 +266,9 @@ export async function GET(request: NextRequest) {
               .in('inscription_id', ids),
           ]);
         const content = generateSQLBackup([
-          { name: 'inscriptions', rows: (insc as Record<string, unknown>[]) ?? [] },
-          { name: 'adult_forms', rows: (adults as Record<string, unknown>[]) ?? [] },
-          { name: 'beneficiary_forms', rows: (benefs as Record<string, unknown>[]) ?? [] },
+          { name: 'inscriptions', rows: (insc as FlatRow[]) ?? [] },
+          { name: 'adult_forms', rows: (adults as FlatRow[]) ?? [] },
+          { name: 'beneficiary_forms', rows: (benefs as FlatRow[]) ?? [] },
         ]);
         return new NextResponse(content, {
           status: 200,
@@ -250,7 +281,7 @@ export async function GET(request: NextRequest) {
 
       case 'csv':
       default: {
-        const content = convertToCSV(data);
+        const content = convertToCSV(flat);
         return new NextResponse(content, {
           status: 200,
           headers: {

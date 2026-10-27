@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase-server';
 const statusLabels: Record<string, { label: string; color: string }> = {
   draft: { label: 'Borrador', color: 'bg-gray-100 text-gray-700' },
   submitted: { label: 'Enviado para revisión', color: 'bg-blue-100 text-blue-700' },
+  approved: { label: 'Aprobado', color: 'bg-green-100 text-green-800' },
   rejected: { label: 'Rechazado', color: 'bg-red-100 text-red-700' },
 };
 

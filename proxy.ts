@@ -1,10 +1,10 @@
-// middleware.ts (raíz del proyecto)
+// proxy.ts (raíz del proyecto)
 // Protege rutas privadas y refresca la sesión de Supabase en cada request
 
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

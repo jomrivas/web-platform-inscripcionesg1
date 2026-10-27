@@ -33,7 +33,7 @@ export default async function AdminLayout({
           <div>
             <h1 className="font-bold">Panel Administrativo</h1>
             <p className="text-xs text-gray-400">
-              Grupo Scout No. 1 "Los Intrépidos"
+              Grupo Scout No. 1 &quot;Los Intrépidos&quot;
             </p>
           </div>
           <nav className="flex items-center gap-6 text-sm">
