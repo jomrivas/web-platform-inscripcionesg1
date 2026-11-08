@@ -1,0 +1,13 @@
+# Normalizacion de finales de linea.
+# El repo guarda LF; en checkout Windows git entrega lo que el archivo pida.
+# Sin esto, Windows + OneDrive hacen que todo el arbol aparezca modificado.
+* text=auto eol=lf
+
+# Binarios: nunca tocar
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.ico   binary
+*.pdf   binary
+*.woff  binary
+*.woff2 binary

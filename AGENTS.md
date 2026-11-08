@@ -23,7 +23,7 @@ equipo administrativo gestiona, filtra y exporta los registros.
 
 - El sistema cubre **las cuatro ramas del grupo**: Manada (7-10 años),
   Scouts (11-14 años), Caminantes (15-17 años) y **Clan Maya/Rovers**
-  (18-21 años) — más los **adultos voluntarios** (dirigentes, comité,
+  (18-21 años con 364 días) — más los **adultos voluntarios** (dirigentes, comité,
   responsables).
 - El **Clan Maya** es específicamente la rama Rover, no el nombre del
   proyecto. El nombre oficial en toda la UI, emails y metadata es
