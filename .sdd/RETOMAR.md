@@ -1,97 +1,130 @@
 # Dónde quedamos
 
-**Última actualización:** 2026-11-07
-**Estado del proyecto:** pausado por elección — prioridad en el Calendario del
-Clan Maya. Se retoma después.
+**Última actualización:** 2026-11-07, 22:15
+**Rama de trabajo:** `mauricio_dev` — `main` no se toca
+**Siguiente acción:** extraer el schema real de producción y escribir
+`supabase/migrations/0000_baseline.sql` (fase de plan de la spec 002, ya aprobada)
 
-Este archivo existe para que retomar no cueste una sesión de reorientación.
-Se actualiza al dejar el proyecto, no al empezar.
+Este archivo se actualiza al dejar el proyecto, no al empezar.
 
 ---
 
-## El proyecto está sano
+## Lo cerrado el 2026-11-07
 
-Conclusión de la revisión del 2026-11-07, contra evidencia y no contra la
-documentación:
+### Niebla de git: resuelta
+`.gitattributes` con `* text=auto eol=lf` y `core.autocrlf=false`. Los 36 archivos
+que aparecían modificados sin un solo cambio real de contenido (CRLF vs LF por
+Windows + OneDrive) desaparecieron. `git status` vuelve a decir la verdad.
 
-- **El repo está limpio.** `git status` reporta 38 archivos modificados, pero
-  `git diff --ignore-cr-at-eol` muestra solo 2 con cambios reales. Los otros 36
-  son finales de línea CRLF vs LF (Windows + OneDrive, sin `.gitattributes` y con
-  `core.autocrlf` sin definir). Las 4 migraciones "modificadas" tienen cero
-  líneas de SQL distintas.
-- **Hay más implementado de lo que decía `AGENTS.md`.** El commit `70430d3`
-  ("Seguridad API, validación Zod, firma obligatoria+táctil, exports reales,
-  aceptar/rechazar admin") entregó cosas que §9 seguía listando como pendientes.
-- **No se justifica reescribir de cero.** Hay cinco migraciones ordenadas,
-  validación Zod server-side, RLS, auditoría, exports reales, aprobar/rechazar
-  y una suite E2E con Page Objects.
+También se quitó un `.git/rebase-merge/` **vacío**, fantasma del `pull --rebase`
+del 4 de octubre que sí había terminado bien. Git no pudo borrar su propio
+directorio porque OneDrive se lo impedía, y eso hacía fallar **cualquier** comando
+git con *"cannot switch branch while rebasing"*.
 
-Lo que estaba desactualizado era la documentación, no el código.
+### Spec 001 (A2): respondida, y el resultado define la 002
 
-## Hallazgos de auditoría ya resueltos
+**Producción y `supabase/migrations/` son dos sistemas distintos.**
 
-Respondidos por el historial de git, no requieren trabajo:
+| Objeto | Migraciones `0001`->`0005` | Producción |
+|---|---|---|
+| `adult_forms` | 41 columnas | **74** |
+| `beneficiary_forms` | ~40 columnas | **110** |
+| `inscriptions` | sin `updated_at` | con `updated_at` |
+| `user_roles` | sin `updated_at` | con `updated_at` |
+| `audit_log` | `inscription_id`, `created_at` | `record_type`, `record_id`, `timestamp`; sin `inscription_id` |
+| Trigger auditoría | `trg_inscriptions_audit` -> `log_inscription_change()` | `inscriptions_audit` -> `audit_inscription_changes()` |
+| Trigger timestamp | no existe | `update_inscriptions_timestamp` -> `update_timestamp()` |
+
+Aplicar las migraciones desde cero **falla**: la `0002` referencia
+`inscriptions.updated_at`, que la `0001` nunca crea. Q2 quedó contestada por las
+propias migraciones — sus encabezados dicen "Aplica en Supabase Dashboard > SQL
+Editor", y la `0004` describe "la base viva" con constraints sobre columnas que la
+`0001` no declara. El schema se construyó en el editor; las migraciones son notas.
+
+### Resueltos por el historial de git, sin trabajo pendiente
 
 | Hallazgo | Resolución |
 |---|---|
-| A2 — ¿`aprobar/rechazar` está completo? | Implementado en `70430d3` |
-| B3 — ¿el export Excel/PDF es real o disfrazado? | Real, en `70430d3` |
-| C2 — ¿`.env.local` está versionado? | No. Cubierto por `.gitignore:41` (`.env*`) |
+| A2 código — ¿`aprobar/rechazar` completo? | Implementado en `70430d3` |
+| B3 — ¿export Excel/PDF real o disfrazado? | Real, en `70430d3` |
+| C2 — ¿`.env.local` versionado? | No. Cubierto por `.gitignore:41` (`.env*`) |
 
-## Decisión vigente sobre el entorno de pruebas
+## La ventana que hay que aprovechar
 
-**Opción A: segundo proyecto Supabase del free tier, dedicado a pruebas.**
-Nada local, nada de Docker. Ver `decisiones/0002-entorno-de-pruebas-segundo-proyecto.md`,
-que supersede a la 0001.
+```
+inscriptions:       1 fila  (adulto, submitted, 2026, creada 04-oct)
+adult_forms:        1 fila
+beneficiary_forms:  0 filas   <- cero datos de menores
+user_roles:         1 fila
+```
 
-Motivo de fondo que no hay que perder de vista: hoy la suite E2E escribe fichas
-ficticias de beneficiarios en las mismas tablas que los datos reales de los
-chicos, y consume cuota de Resend de producción.
+Reconstruir el schema hoy cuesta casi nada. En marzo, con 80-95 fichas y datos
+reales de menores, sería una migración delicada (C4). **Esa es la razón de que la
+spec 002 sea la prioridad.**
 
-## Próximos pasos, en orden
+## Defectos activos en producción que el baseline debe corregir
 
-### 1. Matar la niebla de git — mecánico, ~5 minutos
+No heredar — están en la sección 6 de la spec 002:
 
-No requiere spec: no cambia comportamiento.
+1. **`user_roles` tiene RLS activo y ninguna política.** Nadie lee su propio rol
+   salvo vía `service_role`. La `0001` sí la declaraba: más prueba de que no fue lo
+   aplicado. Viola C2 y C3.
+2. **`audit_inscription_changes()` y `update_timestamp()` con `search_path`
+   mutable**, siendo `SECURITY DEFINER`.
+3. **`audit_log` vacío** con una inscripción `submitted` registrada. O la fila
+   precede al trigger, o la auditoría no funciona. C6 depende de esto (es la Q3 de
+   la 002, verificable).
+4. Protección de contraseñas filtradas desactivada en Supabase Auth.
 
-- Crear `.gitattributes` con `* text=auto eol=lf`
-- Normalizar el árbol y commitear
-- Commitear los dos cambios reales (`AGENTS.md`, `CLAUDE.md`) y el directorio
-  `.sdd/`, que sigue sin versionar
+## Decisión vigente sobre entornos
 
-Resultado: `git status` vuelve a decir la verdad.
+**Decisión 0003: Supabase local en Docker**, como banco de trabajo para construir
+el baseline y como entorno de pruebas permanente. Supersede la 0002; el segundo
+proyecto Supabase se descarta y el slot libre del free tier queda disponible.
 
-### 2. Spec 001 — reconciliación
+Hubo tres decisiones sobre lo mismo y el motivo está en la 0003: el problema nunca
+cambió, cambió la información disponible.
 
-Ya está redactada en `specs/001-reconciliacion/spec.md`, en estado `borrador`.
-Está casi contestada: lo que queda es
-**A2, el diff entre el schema de producción y las migraciones `0001`→`0005`**.
+**Disciplina no negociable desde acá:** todo cambio de schema pasa por una
+migración, nunca por el editor SQL. Es la regla cuya ausencia causó este problema.
 
-Antes de aprobarla, actualizar su alcance: A2, B3 y C2 ya están resueltos (ver
-arriba), así que el alcance real se reduce a la verificación de schema y a
-sincronizar `AGENTS.md`.
+## Pendiente para mañana
 
-Pregunta abierta que solo puede contestar Mauricio (Q2 de la spec):
-**¿las migraciones `0004` y `0005` se aplicaron por CLI o pegando el SQL en el
-editor de Supabase?** Si fue por el editor, ya sabemos que hay deriva.
+### Reparto del trabajo (spec 002, fase de plan)
 
-### 3. Spec 002 — montar el proyecto de pruebas
+| Paso | Quién |
+|---|---|
+| Extraer schema completo de producción (74 + 110 columnas, constraints, índices, triggers, RLS) | Claude, vía MCP de Supabase |
+| Escribir `0000_baseline.sql` con los defectos de arriba corregidos | Claude |
+| `supabase init` · `supabase start` · `db reset` | Mauricio — requiere Docker Desktop |
+| Verificar equivalencia y correr la app contra local | Los dos |
 
-Bloqueada por A2 de la 001. No tiene sentido montar un entorno fiel antes de
-saber a qué debe ser fiel.
+### Preguntas que bloquean la promoción (A7), no la construcción
 
-### 4. Spec 003 — cerrar la brecha de cobertura E2E
+Se puede avanzar hasta A6 sin resolverlas.
 
-`AGENTS.md` §8 declara cobertura de proxy, login/signup, Mis Inscripciones y
-todo el panel admin. En el repo hay dos specs, ambas de formularios de usuario.
-Bloqueada por la 002, porque escribir pruebas nuevas contra producción agravaría
-el problema que la 002 resuelve.
+| # | Pregunta | Decide |
+|---|---|---|
+| Q1 | La única ficha de producción: ¿se preserva, se migra, o se descarta como dato de prueba? | Mauricio |
+| Q2 | ¿Se reconstruye sobre `web-platform-g1` o sobre un proyecto nuevo que luego se promueve? | Mauricio |
+| Q3 | ¿El trigger de auditoría falla, o la fila lo precede? | Claude (verificable) |
+
+## Después de la 002
+
+- **003 — cerrar la brecha de cobertura E2E**, ahora contra local. `AGENTS.md`
+  sección 8 declara cobertura de proxy, login/signup, Mis Inscripciones y todo el
+  panel admin; en el repo hay dos specs, ambas de formularios de usuario.
+- **004 — limpieza estructural:** `next-auth` sin usar, `shadcn-ui` como
+  dependencia de runtime, imagen de fondo fuera de `public/`, `components/` vacío
+  en la raíz.
+- Pendiente de la 001: sincronizar `AGENTS.md` secciones 3, 6, 8 y 9 con la
+  realidad.
 
 ## Reparto de herramientas
 
-- **Claude Code (en la máquina):** el ciclo de construcción — editar archivos,
-  `npm run dev`, correr Playwright, iterar sobre errores, commits y PRs. Lee
-  `CLAUDE.md` y `.sdd/` automáticamente.
-- **Claude en claude.ai (este Proyecto):** especificaciones, decisiones,
-  auditorías de schema vía MCP de Supabase, revisión de despliegues vía MCP de
-  Vercel, y el razonamiento previo a escribir código.
+- **Claude Code (en la máquina):** ciclo de construcción — editar, `npm run dev`,
+  Playwright, iterar, commits. Lee `CLAUDE.md` y `.sdd/` solo.
+- **Claude en claude.ai (este Proyecto):** specs, decisiones, auditorías de schema
+  por MCP de Supabase, revisión de despliegues por MCP de Vercel.
+- **Push a GitHub:** lo hace Mauricio. El shell de Claude en la máquina corre en un
+  entorno Linux aislado que no alcanza el administrador de credenciales de Windows.
