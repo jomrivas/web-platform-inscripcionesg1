@@ -1,7 +1,8 @@
 ---
 id: 0002
 titulo: Entorno de pruebas en un segundo proyecto Supabase, descartando el stack local
-estado: aceptada
+estado: superseded
+superseded_por: 0003
 fecha: 2026-11-07
 decide: Mauricio Rivas
 supersede: 0001
@@ -10,6 +11,11 @@ relacionada: [spec 001, spec 002]
 ---
 
 # 0002 — Entorno de pruebas en un segundo proyecto Supabase
+
+> **Superseded por [0003](0003-supabase-local-docker.md)** (2026-11-07).
+> Se confirmo que Mauricio ya corre Supabase en Docker (lo uso en el proyecto
+> del Calendario), asi que la duda sobre la viabilidad de Docker —la objecion
+> central de esta decision— quedo resuelta. El segundo proyecto se descarta.
 
 **Supersede a [0001](0001-entorno-local-supabase.md).** El problema que 0001
 buscaba resolver sigue siendo el mismo; cambia la solución.

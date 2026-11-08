@@ -30,4 +30,5 @@ No escribir uno para decisiones obvias o reversibles en minutos.
 | ID | Título | Estado | Fecha |
 |---|---|---|---|
 | 0001 | Entorno de pruebas local con Supabase CLI en vez de un segundo proyecto remoto | superseded por 0002 | 2026-11-01 |
-| 0002 | Entorno de pruebas en un segundo proyecto Supabase, descartando el stack local | aceptada | 2026-11-07 |
+| 0002 | Entorno de pruebas en un segundo proyecto Supabase, descartando el stack local | superseded por 0003 | 2026-11-07 |
+| 0003 | Supabase local en Docker como banco de trabajo y entorno de pruebas | aceptada | 2026-11-07 |
