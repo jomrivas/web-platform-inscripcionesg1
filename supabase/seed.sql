@@ -9,18 +9,11 @@
 -- Nota sobre usuarios: crear filas en auth.users a mano es frágil, porque
 -- Supabase Auth espera columnas internas (contraseña cifrada, confirmaciones,
 -- identidades) que cambian entre versiones. Los usuarios de prueba se crean
--- con la Admin API desde tests/e2e/utils/supabaseAdmin.ts, que ya existe.
+-- con la Admin API desde scripts/seed-users.mjs.
 --
--- Este seed solo prepara lo que SÍ es seguro declarar en SQL: el rol admin,
--- asociado por correo al usuario que la suite haya creado.
-
--- Asigna rol admin al usuario de prueba, si la suite ya lo creó.
--- Idempotente: no falla si el usuario todavía no existe.
-insert into public.user_roles (user_id, role)
-select u.id, 'admin'
-from auth.users u
-where u.email = 'e2e_test_admin@gruposcout1.local'
-on conflict (user_id) do update set role = 'admin';
+-- Los usuarios Y sus roles los crea scripts/seed-users.mjs, que corre
+-- después del reset con:  npm run db:reset
+-- Este archivo queda para datos semilla que no dependan de auth.users.
 
 -- Verificación rápida tras `supabase db reset`:
 --   select u.email, r.role from public.user_roles r
