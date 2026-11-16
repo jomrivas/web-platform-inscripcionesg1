@@ -1,13 +1,43 @@
 # Dónde quedamos
 
-**Última actualización:** 2026-11-07, 22:15
+**Última actualización:** 2026-11-15, 20:55
 **Rama de trabajo:** `mauricio_dev` — `main` no se toca
-**Siguiente acción:** extraer el schema real de producción y escribir
-`supabase/migrations/0000_baseline.sql` (fase de plan de la spec 002, ya aprobada)
+**Siguiente acción:** A5 de la spec 002 — recorrido completo de la app contra Supabase local
 
 Este archivo se actualiza al dejar el proyecto, no al empezar.
 
+## Estado al 2026-11-15
+
+- **Baseline `0000` aplicado y verificado en local** (A1–A4 cumplidos): columnas
+  74/110/9/5/8, `user_roles` con 1 política, 0 tablas sin RLS, funciones con
+  `search_path` fijo. Migraciones `0001`–`0005` archivadas en `_archivo/`:
+  `0002`, `0004` y `0005` **nunca se aplicaron a producción**.
+- **Entorno local:** puertos `553xx` (Studio 55323), `.env.local` apunta a
+  `127.0.0.1:55321`; las credenciales de producción están en
+  `.env.production.local`. Reiniciar `npm run dev` tras cambiar de entorno.
+- **Usuarios de prueba:** `npm run db:reset` resetea y los recrea.
+  `e2e.formularios@gruposcout1.test` / `E2eTest123!` (user) ·
+  `e2e.admin@gruposcout1.test` / `E2eAdmin123!` (admin).
+- **Contenedor detenido** con `npx supabase stop`; los datos quedan en el
+  volumen de Docker. Para retomar: abrir Docker Desktop y `npx supabase start`.
+- **Desktop Commander** da a Claude una consola PowerShell en Windows: puede
+  operar Docker, Supabase, npm y git (push solo cuando Mauricio lo pide).
+
+## Pendiente
+
+1. **A5:** alta de adulto (probar tipo de ficha *Nueva*, rama libre, hospital
+   escrito a mano, *Unión libre*), alta de beneficiario, y **aprobar** desde el
+   panel admin.
+2. **A7, promoción a producción:** falta la decisión **Q2** — ¿sobre
+   `web-platform-g1` o un proyecto nuevo? La ficha de prueba de producción se
+   puede borrar (Q1 resuelta).
+3. Candidatos a spec 004: indicador visible de a qué base está conectada la
+   app; `UNIQUE(dui)` global que impide reinscribirse al año siguiente
+   (`[PENDIENTE-1]` del baseline); fechas `timestamp` sin zona horaria.
+
 ---
+
+## Histórico
 
 ## Lo cerrado el 2026-11-07
 
