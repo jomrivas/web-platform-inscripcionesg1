@@ -194,9 +194,9 @@ pone datos de menores en riesgo. Es precisamente la razón de hacerla ahora (§3
 
 | # | Pregunta | Decide | Estado |
 |---|---|---|---|
-| Q1 | La única ficha de producción (adulto, `submitted`, oct-2026): ¿se preserva, se migra al nuevo schema, o se descarta como dato de prueba? | Mauricio | abierta |
-| Q2 | ¿Se reconstruye sobre el mismo proyecto `web-platform-g1` o sobre uno nuevo que después se promueve? | Mauricio | abierta |
-| Q3 | ¿El trigger de auditoría falla, o la fila existente lo precede? | Claude (verificable) | abierta |
+| Q1 | La única ficha de producción (adulto, `submitted`, oct-2026): ¿se preserva, se migra al nuevo schema, o se descarta como dato de prueba? | Mauricio | **resuelta 2026-11-11:** era una prueba, se descarta |
+| Q2 | ¿Se reconstruye sobre el mismo proyecto `web-platform-g1` o sobre uno nuevo que después se promueve? | Mauricio | **resuelta 2026-11-20:** sobre `web-platform-g1`. La cuota gratuita (2 proyectos activos por usuario) está ocupada |
+| Q3 | ¿El trigger de auditoría falla, o la fila existente lo precede? | Claude (verificable) | **resuelta 2026-11-11:** nunca registraba (guard `IF admin_id IS NOT NULL` + escrituras con service_role). Corregido en `[FIX-10]` |
 
 Q1 y Q2 bloquean la promoción (A7), no la construcción del baseline. Se puede
 avanzar hasta A6 sin resolverlas.
