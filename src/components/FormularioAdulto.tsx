@@ -203,6 +203,15 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
         : '',
   });
 
+  // Texto crudo de los textareas "uno por línea". Se guarda tal cual se
+  // escribe: si el textarea se pintara desde el array ya limpio, cada
+  // trim()/filter() borraría espacios y saltos de línea mientras se tipea.
+  const [arrayDrafts, setArrayDrafts] = useState<Record<string, string>>(() => ({
+    grupo_familiar: toStrArray(initialData.grupo_familiar).join('\n'),
+    grupos_previos: toStrArray(initialData.grupos_previos).join('\n'),
+    formacion_scout: toStrArray(initialData.formacion_scout).join('\n'),
+    referencias: toStrArray(initialData.referencias).join('\n'),
+  }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<string>('personales');
 
@@ -284,6 +293,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
   };
 
   const handleArrayChange = (name: keyof FormDataAdulto, text: string) => {
+    setArrayDrafts((prev) => ({ ...prev, [name]: text }));
     const arr = text
       .split('\n')
       .map((l) => l.trim())
@@ -316,7 +326,6 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
     }
   };
 
-  const arrText = (v?: string[]) => (v || []).join('\n');
   const bool = (v?: boolean) => v || false;
   const txt = (v?: string | number) => v ?? '';
 
@@ -620,7 +629,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
             <Field label="Grupo familiar (una persona por línea)">
               <textarea
                 name="grupo_familiar"
-                value={arrText(formData.grupo_familiar)}
+                value={arrayDrafts.grupo_familiar ?? ''}
                 onChange={(e) =>
                   handleArrayChange('grupo_familiar', e.target.value)
                 }
@@ -849,7 +858,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
           <Field label="Grupos previos (uno por línea)">
             <textarea
               name="grupos_previos"
-              value={arrText(formData.grupos_previos)}
+              value={arrayDrafts.grupos_previos ?? ''}
               onChange={(e) =>
                 handleArrayChange('grupos_previos', e.target.value)
               }
@@ -860,7 +869,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
           <Field label="Formación scout (una por línea)">
             <textarea
               name="formacion_scout"
-              value={arrText(formData.formacion_scout)}
+              value={arrayDrafts.formacion_scout ?? ''}
               onChange={(e) =>
                 handleArrayChange('formacion_scout', e.target.value)
               }
@@ -871,7 +880,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
           <Field label="Referencias (una por línea)">
             <textarea
               name="referencias"
-              value={arrText(formData.referencias)}
+              value={arrayDrafts.referencias ?? ''}
               onChange={(e) => handleArrayChange('referencias', e.target.value)}
               rows={3}
               className={inputCls()}
