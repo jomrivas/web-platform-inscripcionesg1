@@ -1,39 +1,63 @@
 # Dónde quedamos
 
-**Última actualización:** 2026-11-15, 20:55
+**Última actualización:** 2026-11-20, 18:00
 **Rama de trabajo:** `mauricio_dev` — `main` no se toca
-**Siguiente acción:** A5 de la spec 002 — recorrido completo de la app contra Supabase local
+**Siguiente acción:** A5 de beneficiario, y decidir Q2 para promover a producción
 
 Este archivo se actualiza al dejar el proyecto, no al empezar.
 
-## Estado al 2026-11-15
+> **Al retomar, revisar la rama primero.** GitHub Desktop abre el repo en la
+> última rama seleccionada y el 2026-11-20 el checkout apareció en `main`, que
+> no tiene nada del trabajo nuevo (ni baseline, ni `config.toml`, ni scripts).
 
-- **Baseline `0000` aplicado y verificado en local** (A1–A4 cumplidos): columnas
-  74/110/9/5/8, `user_roles` con 1 política, 0 tablas sin RLS, funciones con
-  `search_path` fijo. Migraciones `0001`–`0005` archivadas en `_archivo/`:
-  `0002`, `0004` y `0005` **nunca se aplicaron a producción**.
-- **Entorno local:** puertos `553xx` (Studio 55323), `.env.local` apunta a
-  `127.0.0.1:55321`; las credenciales de producción están en
-  `.env.production.local`. Reiniciar `npm run dev` tras cambiar de entorno.
-- **Usuarios de prueba:** `npm run db:reset` resetea y los recrea.
+## A5 — verificación contra Supabase local
+
+| Caso | Resultado | En producción |
+|---|---|---|
+| Alta de adulto | ✔ guardada (`POST 201`) | — |
+| Tipo de ficha `nueva` | ✔ | ✗ rechazado por constraint |
+| Rama en texto libre (`Clan Rover`) | ✔ | ✗ rechazado por constraint |
+| Trasladar a `Hospital de Diagnostico` | ✔ | ✗ rechazado por constraint |
+| Firma dibujada (dirigente) | ✔ | ✔ |
+| Edición de la ficha desde el panel | ✔ carga | — |
+| **Aprobar** desde el panel admin | ✔ `approved` | ✗ `approved` no existe en el constraint |
+| `audit_log` | ✔ INSERT y UPDATE `submitted → approved` | ✗ vacío desde siempre |
+| Estado civil `union_libre` desde la app | pendiente (verificado solo en SQL) | ✗ |
+| **Alta de beneficiario** | **pendiente** | — |
+
+## Corregido el 2026-11-20
+
+- **Campos "uno por línea" de la ficha de adulto** (Grupo familiar y los tres
+  de Trayectoria Scout) no aceptaban espacios ni Enter: el textarea se pintaba
+  desde el array ya limpio y cada `trim()`/`filter()` borraba lo que se
+  tipeaba. Commit `d6548ff`, verificado tecleando con Playwright.
+  Evidencia del daño: un intento previo guardó
+  `"IMProgramaDeJovenesRamaRover2017"`, con los espacios comidos.
+
+## Hallazgos abiertos
+
+- **La auditoría no registra qué admin aprobó.** La fila `submitted → approved`
+  queda con `admin_id` NULL ("sistema") porque el route handler escribe con
+  `service_role`. C6 pide trazabilidad administrativa: el registro existe pero
+  no dice quién. Candidato a spec.
+- Candidatos a spec 004: indicador visible de a qué base está conectada la app;
+  `UNIQUE(dui)` global que impide reinscribirse al año siguiente
+  (`[PENDIENTE-1]` del baseline); fechas `timestamp` sin zona horaria.
+
+## Entorno local
+
+- `npx supabase start` (Docker Desktop abierto) · `npm run dev`
+- `npm run db:reset` resetea y recrea usuarios:
   `e2e.formularios@gruposcout1.test` / `E2eTest123!` (user) ·
-  `e2e.admin@gruposcout1.test` / `E2eAdmin123!` (admin).
-- **Contenedor detenido** con `npx supabase stop`; los datos quedan en el
-  volumen de Docker. Para retomar: abrir Docker Desktop y `npx supabase start`.
-- **Desktop Commander** da a Claude una consola PowerShell en Windows: puede
-  operar Docker, Supabase, npm y git (push solo cuando Mauricio lo pide).
+  `e2e.admin@gruposcout1.test` / `E2eAdmin123!` (admin)
+- `.env.local` → local · `.env.production.local` → producción
+- Claude opera Docker, Supabase, npm, git y Playwright vía Desktop Commander.
+  Push solo cuando Mauricio lo pide.
 
-## Pendiente
+## Pendiente para promover (A7)
 
-1. **A5:** alta de adulto (probar tipo de ficha *Nueva*, rama libre, hospital
-   escrito a mano, *Unión libre*), alta de beneficiario, y **aprobar** desde el
-   panel admin.
-2. **A7, promoción a producción:** falta la decisión **Q2** — ¿sobre
-   `web-platform-g1` o un proyecto nuevo? La ficha de prueba de producción se
-   puede borrar (Q1 resuelta).
-3. Candidatos a spec 004: indicador visible de a qué base está conectada la
-   app; `UNIQUE(dui)` global que impide reinscribirse al año siguiente
-   (`[PENDIENTE-1]` del baseline); fechas `timestamp` sin zona horaria.
+**Q2:** ¿se reconstruye sobre `web-platform-g1` o sobre un proyecto nuevo? La
+ficha de prueba de producción se puede borrar (Q1 resuelta).
 
 ---
 
