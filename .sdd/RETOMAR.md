@@ -2,7 +2,7 @@
 
 **Última actualización:** 2026-11-20, 22:00
 **Rama de trabajo:** `mauricio_dev` — `main` no se toca
-**Siguiente acción:** plan de promoción a producción (A7) sobre `web-platform-g1` — paso destructivo, requiere aprobación de Mauricio
+**Siguiente acción:** rediseño UX/UI (moderno, minimalista, fresco) **antes** de promover. Después, plan de promoción (A7) sobre `web-platform-g1` — paso destructivo, requiere aprobación de Mauricio
 
 Este archivo se actualiza al dejar el proyecto, no al empezar.
 
