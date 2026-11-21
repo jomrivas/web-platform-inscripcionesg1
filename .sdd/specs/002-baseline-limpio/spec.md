@@ -2,7 +2,7 @@
 id: 002
 slug: baseline-limpio
 titulo: Reconstruir el schema desde un baseline limpio y verificable
-estado: aprobada
+estado: en-curso
 prioridad: alta
 creada: 2026-11-07
 aprobada: 2026-11-07
@@ -159,16 +159,16 @@ verificación. Durante esta spec, producción no se toca por fuera de ella.
 
 ## 9. Criterios de aceptación
 
-- [ ] **A1** Existe `supabase/migrations/0000_baseline.sql` que reproduce el schema
+- [x] **A1** Existe `supabase/migrations/0000_baseline.sql` que reproduce el schema
       de producción con los defectos de §6 corregidos.
-- [ ] **A2** `supabase db reset` en local construye la base sin error desde cero.
-- [ ] **A3** El diff entre el local reconstruido y producción no muestra ninguna
+- [x] **A2** `supabase db reset` en local construye la base sin error desde cero.
+- [x] **A3** El diff entre el local reconstruido y producción no muestra ninguna
       diferencia fuera de §6.
-- [ ] **A4** `get_advisors` sobre el local no reporta tabla con RLS sin política,
+- [x] **A4** `get_advisors` sobre el local no reporta tabla con RLS sin política,
       vista `SECURITY DEFINER` ni función con `search_path` mutable.
-- [ ] **A5** Un alta de adulto y una de beneficiario se completan de punta a punta
+- [x] **A5** Un alta de adulto y una de beneficiario se completan de punta a punta
       contra el local.
-- [ ] **A6** Está determinado si el trigger de auditoría funciona, y si no,
+- [x] **A6** Está determinado si el trigger de auditoría funciona, y si no,
       corregido en el baseline (C6).
 - [ ] **A7** El baseline está aplicado a producción y la aplicación desplegada
       funciona.

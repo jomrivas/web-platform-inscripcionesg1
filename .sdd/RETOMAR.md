@@ -1,8 +1,8 @@
 # Dónde quedamos
 
-**Última actualización:** 2026-11-20, 18:00
+**Última actualización:** 2026-11-20, 22:00
 **Rama de trabajo:** `mauricio_dev` — `main` no se toca
-**Siguiente acción:** A5 de beneficiario, y decidir Q2 para promover a producción
+**Siguiente acción:** plan de promoción a producción (A7) sobre `web-platform-g1` — paso destructivo, requiere aprobación de Mauricio
 
 Este archivo se actualiza al dejar el proyecto, no al empezar.
 
@@ -22,8 +22,11 @@ Este archivo se actualiza al dejar el proyecto, no al empezar.
 | Edición de la ficha desde el panel | ✔ carga | — |
 | **Aprobar** desde el panel admin | ✔ `approved` | ✗ `approved` no existe en el constraint |
 | `audit_log` | ✔ INSERT y UPDATE `submitted → approved` | ✗ vacío desde siempre |
-| Estado civil `union_libre` desde la app | pendiente (verificado solo en SQL) | ✗ |
-| **Alta de beneficiario** | **pendiente** | — |
+| Estado civil `union_libre` desde la app | ✔ | ✗ |
+| Alta de beneficiario (`caminantes_15_17`, dos tutores, dos firmas) | ✔ | — |
+| Textareas guardados con espacios y una entrada por línea | ✔ `["Linea 1", "Linea 2"]` | ✗ |
+
+**A1–A6 cumplidos.** Pendiente en spec 003: comprobar que un usuario normal que entra a `/admin` sea redirigido (las fichas del 20-nov se llenaron con la cuenta admin).
 
 ## Corregido el 2026-11-20
 
@@ -56,8 +59,10 @@ Este archivo se actualiza al dejar el proyecto, no al empezar.
 
 ## Pendiente para promover (A7)
 
-**Q2:** ¿se reconstruye sobre `web-platform-g1` o sobre un proyecto nuevo? La
-ficha de prueba de producción se puede borrar (Q1 resuelta).
+**Q2 resuelta:** sobre `web-platform-g1`. La ficha de prueba de producción se
+puede borrar (Q1). Ojo: el baseline usa `create table if not exists`, así que
+aplicado sobre las tablas existentes no corregiría nada; hay que partir de una
+base limpia. Plan a presentar antes de ejecutar.
 
 ---
 
