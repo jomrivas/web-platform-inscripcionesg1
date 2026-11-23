@@ -11,7 +11,7 @@ Copiar desde `../templates/`.
 | 002 | Reconstruir el schema desde un baseline limpio y verificable | **aprobada** | alta | 001 |
 | 003 | Cerrar la brecha de cobertura E2E | borrador | alta | 002 |
 | 004 | Limpieza estructural y de dependencias | borrador | media | 001 |
-| 005 | Rediseño UX/UI de toda la app con la identidad del Grupo Scout No. 1 | borrador | alta | 002 |
+| 005 | Rediseño UX/UI de toda la app con la identidad del Grupo Scout No. 1 | **aprobada** | alta | 002 |
 
 ## Orden y por qué
 

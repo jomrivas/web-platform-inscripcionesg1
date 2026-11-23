@@ -2,14 +2,14 @@
 id: 005
 slug: rediseno-ux-ui
 titulo: Rediseño UX/UI de toda la app con la identidad del Grupo Scout No. 1
-estado: borrador
+estado: aprobada
 prioridad: alta
 creada: 2026-11-22
-aprobada: ---
+aprobada: 2026-11-22
 constitucion: [C2, C5, C7, C8, C9, C10, C11]
 depende: [002]
 bloquea: [promoción a producción (A7 de la 002)]
-diseño: "Lienzo «Inscripciones G1 — Rediseño UX/UI» (Artifact de diseño, 9 tableros)"
+diseño: "Lienzo «Inscripciones G1 — Rediseño UX/UI» (Artifact de diseño, 11 tableros)"
 decision: 0004
 ---
 
@@ -34,8 +34,14 @@ funcionar.
 
 ## 3. Referencias
 
-- **Diseño aprobado:** lienzo «Inscripciones G1 — Rediseño UX/UI»: base visual,
-  6 pantallas móviles de familia y 2 de administración.
+- **Diseño aprobado:** lienzo «Inscripciones G1 — Rediseño UX/UI»: portada
+  (escritorio y móvil), base visual, 6 pantallas móviles de familia y 2 de
+  administración.
+- **Referencia de la portada:** el ingreso de *Calendar Check Clan Maya*
+  (`calendar-clanmaya-g1.vercel.app/login`), de la que se toma la **estructura**:
+  pantalla partida en escritorio, panel de marca a la izquierda, titular a dos
+  tonos y franja decorativa abajo. No se toma su identidad (C7): la greca maya
+  se reemplaza por una franja con los cuatro colores de rama del logo.
 - **Identidad aprobada:** decisión `0004` — azul del logo `#0E1754` y blanco,
   colores por rama, Nunito.
 - **Referencias de estilo de Mauricio:** formulario multipaso en móvil (un paso
@@ -56,9 +62,12 @@ funcionar.
 - **Componentes base** reutilizables: botón (primario, secundario, peligro),
   campo con etiqueta, ayuda y error, chip de estado, chip de rama, indicador de
   pasos, tarjeta, navegación inferior móvil, barra lateral admin.
-- **Las 11 páginas:** landing, ingreso, registro, inicio, elegir tipo, ficha de
+- **Las 11 páginas:** portada, ingreso, registro, inicio, elegir tipo, ficha de
   adulto, ficha de beneficiario, mis inscripciones, panel admin, listados y
   revisión de inscripción.
+- **Portada al mismo nivel que el resto**, según sus dos tableros. En
+  escritorio, ingreso y registro reutilizan la misma pantalla partida de la
+  portada; en móvil siguen el tablero *1 · Ingreso*.
 - **Fichas: de pestañas a pasos.** Cada pestaña actual pasa a ser un paso, en
   el mismo orden y con los mismos campos (ver §6).
 - **Mobile first** para todo el flujo de familias; escritorio para el admin, que
@@ -75,10 +84,18 @@ funcionar.
   son los selectores de las pruebas.
 - **Las funciones nuevas que el lienzo insinúa.** Cada una cambia comportamiento
   o datos, así que va en su propia spec (ver §11):
-  guardar borrador a mitad de ficha, que la familia vea el motivo de rechazo,
+  que la familia vea el motivo de rechazo,
   historial con el admin que aprobó, lista "Ten a mano" dinámica.
   El lienzo las muestra como dirección futura; esta spec implementa su aspecto
   donde el dato ya existe y las omite donde no.
+
+### Excluido por decisión: guardar borrador a mitad de ficha
+
+Mauricio lo descarta explícitamente. Si el responsable puede dejar la ficha a
+medias, en la práctica corre el riesgo de no terminarla, y el grupo necesita
+los datos completos para la inscripción anual ante la ASES. La ficha se llena,
+se firma y se envía en una sola sesión. El lienzo ya no muestra *Guardar* ni
+fichas en borrador. Queda como mejora futura (§11).
 
 ## 5. Actores
 
@@ -146,7 +163,7 @@ Clan Rover rojo. El color nunca es la única señal: siempre va con el texto.
 
 - [ ] **A1** Existen los tokens en el tema de Tailwind y ningún componente usa un
       hex suelto (búsqueda en `app/` y `src/`).
-- [ ] **A2** Las 11 páginas siguen el lienzo aprobado.
+- [ ] **A2** Las 11 páginas siguen el lienzo aprobado, portada incluida.
 - [ ] **A3** Ambas fichas funcionan por pasos y cumplen E1, E2 y E3.
 - [ ] **A4** A 360 px ninguna página de familia tiene desplazamiento horizontal
       (E4), verificado con Playwright.
@@ -170,8 +187,9 @@ mockups y la documentación no muestran datos reales.
 
 Salen del lienzo y quedan registrados para no perderlos:
 
-- **Guardar borrador a mitad de ficha.** El estado `draft` existe, pero el flujo
-  no lo usa así.
+- **Guardar borrador a mitad de ficha** — mejora futura, excluida a propósito
+  hoy (§4). Si se retoma, debería incluir recordatorios para que la ficha no
+  quede sin terminar.
 - **La familia ve el motivo de rechazo.** Hoy `rejection_reason` solo lo ve el
   admin.
 - **Historial con el admin que aprobó.** Depende de corregir que `audit_log`
@@ -183,5 +201,5 @@ Salen del lienzo y quedan registrados para no perderlos:
 
 | # | Pregunta | Decide | Estado |
 |---|---|---|---|
-| Q1 | ¿Se implementa por partes (base y componentes → familia → admin) con un commit verificado por parte, o todo de una vez? | Mauricio | abierta — recomendación: por partes |
-| Q2 | ¿La landing pública se rediseña con el mismo peso, o basta con que lleve al ingreso? | Mauricio | abierta |
+| Q1 | ¿Se implementa por partes o todo de una vez? | Mauricio | **resuelta 2026-11-22:** en 3 etapas — (1) tokens, fuente, marca y componentes base; (2) portada y flujo de familias; (3) panel admin. Un commit verificado por etapa |
+| Q2 | ¿La landing pública se rediseña con el mismo peso? | Mauricio | **resuelta 2026-11-22:** sí, con la estructura del ingreso de Calendar Check Clan Maya (ver §3) |
