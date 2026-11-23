@@ -32,3 +32,4 @@ No escribir uno para decisiones obvias o reversibles en minutos.
 | 0001 | Entorno de pruebas local con Supabase CLI en vez de un segundo proyecto remoto | superseded por 0002 | 2026-11-01 |
 | 0002 | Entorno de pruebas en un segundo proyecto Supabase, descartando el stack local | superseded por 0003 | 2026-11-07 |
 | 0003 | Supabase local en Docker como banco de trabajo y entorno de pruebas | aceptada | 2026-11-07 |
+| 0004 | Identidad visual de la app — azul del logo y blanco, colores por rama, Nunito | aceptada | 2026-11-22 |
