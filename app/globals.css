@@ -1,41 +1,92 @@
 @import "tailwindcss";
 
+/* ──────────────────────────────────────────────────────────────
+   Tokens de diseño — spec 005, decisión 0004.
+   Único lugar donde viven los hex: los componentes usan las
+   clases que Tailwind genera de aquí (bg-brand, text-muted, …).
+   ────────────────────────────────────────────────────────────── */
+@theme {
+  /* Marca: azul de la pañoleta y blanco */
+  --color-brand: #0e1754;
+  --color-brand-hover: #1f2e8a;
+  --color-brand-soft: #e8ebf7;
+  --color-on-brand: #ffffff;
+  --color-on-brand-muted: #c9cfea;
+
+  /* Neutros */
+  --color-surface: #ffffff;
+  --color-canvas: #f4f6fb;
+  --color-line: #e2e6f0;
+  --color-line-strong: #d4d9e6;
+  --color-line-soft: #eef1f6;
+  --color-ink: #141b3d;
+  --color-ink-soft: #3b4366;
+  --color-muted: #5a6380;
+
+  /* Ramas (punto + tinte; nunca como color de texto) */
+  --color-manada: #f2eb0c;
+  --color-manada-dot: #d9cf00;
+  --color-manada-soft: #fdf9d2;
+  --color-unidad: #0e6305;
+  --color-unidad-soft: #e4f0e2;
+  --color-caminantes: #0c6ac6;
+  --color-caminantes-soft: #e3eefa;
+  --color-rover: #aa0f0f;
+  --color-rover-soft: #f7e4e4;
+
+  /* Estados */
+  --color-ok: #0e7a55;
+  --color-ok-soft: #e6f4ee;
+  --color-warn: #a15c07;
+  --color-warn-strong: #7a4505;
+  --color-warn-soft: #fcf1e3;
+  --color-danger: #b42318;
+  --color-danger-soft: #fbeae8;
+
+  /* Radios */
+  --radius-control: 0.875rem; /* 14 px: botones y campos */
+  --radius-card: 1.125rem; /* 18 px: tarjetas */
+  --radius-panel: 1.25rem; /* 20 px: paneles grandes */
+
+  /* Sombras */
+  --shadow-card: 0 1px 2px rgb(14 23 84 / 0.06);
+  --shadow-raised: 0 1px 2px rgb(14 23 84 / 0.06), 0 8px 24px rgb(14 23 84 / 0.06);
+}
+
+@theme inline {
+  /* Nunito llega como variable desde next/font en app/layout.tsx */
+  --font-sans: var(--font-nunito), system-ui, sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
   /* La app está diseñada solo en modo claro: evita que el navegador
      oscurezca controles nativos (date picker, scrollbars, etc.) */
   color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-/* Diseño solo claro: se ignora el modo oscuro del SO para que
-   el fondo y el texto nunca se inviertan bajo los contenedores. */
-
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }
 
-/* Los inputs heredaban el color del body, que en modo oscuro del SO
-   es casi blanco → texto invisible sobre fondo blanco del input.
-   Se fija color oscuro explícito en todos los controles de formulario. */
+/* Los controles no heredan el color del body: se fija tinta explícita
+   para que el texto nunca quede invisible sobre el fondo blanco. */
 input,
 textarea,
 select {
-  color: #171717;
-  background-color: #ffffff;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #9ca3af;
+  color: var(--color-muted); /* 5.9:1, cumple R3 */
   opacity: 1;
+}
+
+/* Foco visible y consistente en toda la app (teclado). */
+:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
 }
