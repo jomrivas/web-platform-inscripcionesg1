@@ -6,6 +6,7 @@ estado: aprobada
 prioridad: alta
 creada: 2026-11-22
 aprobada: 2026-11-22
+enmendada: 2026-11-24 (ver §13)
 constitucion: [C2, C5, C7, C8, C9, C10, C11]
 depende: [002]
 bloquea: [promoción a producción (A7 de la 002)]
@@ -78,8 +79,9 @@ funcionar.
 
 ### No incluye
 
-- **Cambios de schema, de API ni de validaciones.** Es un rediseño visual y de
-  navegación.
+- **Cambios de schema, de API ni de validaciones**, con una sola excepción:
+  el correo obligatorio de cada tutor (E7, R9), agregada por enmienda. Fuera
+  de eso, es un rediseño visual y de navegación.
 - **Renombrar ningún atributo `name`** (C8): coinciden con columnas de la base y
   son los selectores de las pruebas.
 - **Las funciones nuevas que el lienzo insinúa.** Cada una cambia comportamiento
@@ -144,6 +146,11 @@ muestra con su chip (aprobada, en revisión, rechazada, borrador) y la rama con
 su color: Manada amarillo, Unidad Scout verde, Comunidad de Caminantes celeste,
 Clan Rover rojo. El color nunca es la única señal: siempre va con el texto.
 
+**E7 — Correo de cada tutor.** Dado un tutor registrado en la ficha de
+beneficiario (madre o padre con nombre), cuando su correo está vacío o no
+tiene formato válido, entonces la ficha no avanza ni se envía, y el campo
+muestra el error. El tutor que no se registra no necesita correo.
+
 ## 8. Reglas
 
 - **R1** Ningún `name` de input cambia (C8). Se verifica con un diff.
@@ -158,6 +165,12 @@ Clan Rover rojo. El color nunca es la única señal: siempre va con el texto.
   usar APIs de framework (C11), en particular `next/font` e imágenes.
 - **R8** Se trabaja contra Supabase local. Nada de este rediseño toca producción
   hasta la promoción de la 002.
+- **R9** Regla de E7, validada en el servidor en `lib/validators.ts` (C5): si
+  `madre_nombre` tiene valor, `madre_email` es obligatorio y válido; igual con
+  `padre_nombre` y `padre_email`. La regla actual de al menos un tutor se
+  mantiene. El cliente la refleja (`required`, sin "opcional" en la etiqueta),
+  pero no la reemplaza. Las columnas siguen aceptando vacío: no hay migración,
+  y las fichas ya guardadas sin correo no se tocan.
 
 ## 9. Criterios de aceptación
 
@@ -170,12 +183,16 @@ Clan Rover rojo. El color nunca es la única señal: siempre va con el texto.
 - [ ] **A5** El panel admin es usable en teléfono (E5).
 - [ ] **A6** El diff de la spec no cambia ningún atributo `name` (R1).
 - [ ] **A7** Las pruebas E2E existentes pasan sin modificar sus selectores.
+      Única excepción, por R9: los datos de prueba del beneficiario agregan
+      `madre_email` y `fillTutor` del POM lo llena (C9).
 - [ ] **A8** Todo `<label>` de las fichas está asociado a su campo.
 - [ ] **A9** Contraste y áreas tocables cumplen R3 y R4.
 - [ ] **A10** Logo, isotipo y favicon en su lugar; la fuente carga sin CDN.
 - [ ] **A11** Alta de adulto y de beneficiario y aprobación desde el panel
       funcionan de punta a punta contra Supabase local, igual que en el A5 de la 002.
 - [ ] **A12** `AGENTS.md` §6 y §7 describen la estructura y las decisiones nuevas.
+- [ ] **A13** E7 y R9 cubiertos por E2E: tutor sin correo es rechazado por el
+      servidor, y madre con correo + padre sin registrar pasa.
 
 ## 10. Datos y seguridad
 
@@ -203,3 +220,19 @@ Salen del lienzo y quedan registrados para no perderlos:
 |---|---|---|---|
 | Q1 | ¿Se implementa por partes o todo de una vez? | Mauricio | **resuelta 2026-11-22:** en 3 etapas — (1) tokens, fuente, marca y componentes base; (2) portada y flujo de familias; (3) panel admin. Un commit verificado por etapa |
 | Q2 | ¿La landing pública se rediseña con el mismo peso? | Mauricio | **resuelta 2026-11-22:** sí, con la estructura del ingreso de Calendar Check Clan Maya (ver §3) |
+| Q3 | ¿El correo del tutor es obligatorio y bajo qué regla? | Mauricio | **resuelta 2026-11-24:** sí, opción A — cada tutor registrado lleva su correo (E7, R9). Descartada la B (al menos un correo por ficha) |
+
+## 13. Enmiendas
+
+**2026-11-24** — Revisión del lienzo con Mauricio. Look and feel aprobado.
+
+- **Correo de tutor obligatorio** (Q3): agrega E7, R9 y A13, y ajusta A7.
+- **Textos fijos del producto**, que la etapa 2 implementa tal cual:
+  - Periodo: **Inscripciones 2027-2028** en todas las pantallas. La inscripción
+    anual va de marzo 2027 a febrero 2028 según la ASES; se usa ese rango para
+    no confundir la inscripción al grupo con la de la ASES.
+  - Lema: siempre **«¡Siempre listos para servir!»**, con signos de apertura y
+    cierre.
+  - Afiliación: **«miembro inscrito a la ASES»**.
+  - Calendario: **inscripción ordinaria: marzo**. Desde abril es extraordinaria.
+
