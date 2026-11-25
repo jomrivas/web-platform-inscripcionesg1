@@ -15,7 +15,7 @@ export default async function EditarInscripcionPage({
 
   const { data: inscription } = await supabase
     .from('inscriptions')
-    .select('id, user_id, type, inscription_year, status, rejection_reason')
+    .select('id, user_id, type, inscription_year, status, rejection_reason, submitted_at, created_at')
     .eq('id', id)
     .single();
 
@@ -40,6 +40,8 @@ export default async function EditarInscripcionPage({
           inscription_year: number;
           status: string;
           rejection_reason?: string | null;
+          submitted_at?: string | null;
+          created_at?: string | null;
         }
       }
       initialForm={(form as Record<string, unknown>) ?? {}}

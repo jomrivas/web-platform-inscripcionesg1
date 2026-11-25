@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import SignaturePad from './SignaturePad';
-import { FichaSection, FichaShell, StepError, firstStepWithError } from './ficha/FichaShell';
+import { FichaSection, FichaShell, StepError, firstStepWithError, type FichaVariant } from './ficha/FichaShell';
 import { Field, Input, Select, Textarea } from './ui/Field';
 
 export interface FormDataBeneficiario {
@@ -58,6 +58,8 @@ interface FormularioBeneficiarioProps {
   isLoading?: boolean;
   /** Errores por campo devueltos por el servidor (E3). */
   serverErrors?: Record<string, string[] | undefined>;
+  /** `admin` cuando se edita desde el panel (guarda en vez de enviar). */
+  variant?: FichaVariant;
 }
 
 // Los nombres de paso son los de las pestañas anteriores: las pruebas
@@ -86,6 +88,7 @@ const FormularioBeneficiario: React.FC<FormularioBeneficiarioProps> = ({
   onSubmit,
   isLoading = false,
   serverErrors,
+  variant = 'familia',
 }) => {
   const [formData, setFormData] = useState<FormDataBeneficiario>({
     rama_inscripcion: initialData.rama_inscripcion || 'manada_7_10',
@@ -245,6 +248,7 @@ const FormularioBeneficiario: React.FC<FormularioBeneficiarioProps> = ({
         onNext={handleNext}
         isLoading={isLoading}
         focusKey={focusKey}
+        variant={variant}
       >
         {activeTab === 'personales' && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -20,4 +20,8 @@
 
 ## Etapa 3 — Panel admin
 
-_Se desglosa al cerrar la etapa 2._
+- [x] T13 Layout con `AdminSidebar` (se apila arriba en teléfono, E5)
+- [x] T14 Resumen con KPIs y listado con filtros, chips de estado y rama, acciones y exportación
+- [x] T15 Revisión: encabezado con estado, motivo de rechazo en panel lateral y ficha editable en modo admin
+- [x] T16 Verificación: tsc y lint limpios; sin desbordamiento a 1440 y 360 px; E2E 11/12 ([PENDIENTE-1])
+- [x] T17 Sincronización: `AGENTS.md` §5.3, §6, §7, §8 e inventario (C10, A12)

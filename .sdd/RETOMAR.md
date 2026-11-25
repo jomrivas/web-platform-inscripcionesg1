@@ -1,14 +1,47 @@
 # Dónde quedamos
 
-**Última actualización:** 2026-11-20, 22:00
+**Última actualización:** 2026-11-24, 21:45
 **Rama de trabajo:** `mauricio_dev` — `main` no se toca
-**Siguiente acción:** rediseño UX/UI (moderno, minimalista, fresco) **antes** de promover. Después, plan de promoción (A7) sobre `web-platform-g1` — paso destructivo, requiere aprobación de Mauricio
+**Siguiente acción:** plan de promoción (A7 de la 002) sobre `web-platform-g1`
+— paso destructivo, requiere aprobación de Mauricio. Antes de liberar a las
+familias, prueba de aceptación con los dirigentes del grupo, idealmente en un
+despliegue de vista previa de Vercel.
 
 Este archivo se actualiza al dejar el proyecto, no al empezar.
 
 > **Al retomar, revisar la rama primero.** GitHub Desktop abre el repo en la
 > última rama seleccionada y el 2026-11-20 el checkout apareció en `main`, que
 > no tiene nada del trabajo nuevo (ni baseline, ni `config.toml`, ni scripts).
+
+## Cerrado el 2026-11-24 — spec 005 (rediseño UX/UI)
+
+Tres etapas, un commit verificado cada una:
+
+| Etapa | Commit | Qué |
+|---|---|---|
+| 1 | `5440764` | Tokens (decisión 0004), Nunito, íconos, componentes base |
+| 2 | `07bb684` | Portada, ingreso, flujo de familias, fichas por pasos, R9 |
+| 3 | (este cierre) | Panel admin: barra lateral, resumen, listado, revisión |
+
+- Enmienda del 24-nov: **correo obligatorio por cada tutor registrado** (R9) y
+  textos fijos (*Inscripciones 2027-2028*, *¡Siempre listos para servir!*,
+  *miembro inscrito a la ASES*, *ordinaria: marzo*).
+- Validado por Mauricio: navegación y firma con el dedo en iPhone; aprobar y
+  rechazar con motivo desde el panel.
+- E2E 11/12. La falla es `[PENDIENTE-1]`.
+
+### Hallazgos nuevos
+
+- **`inscription_year` toma el año de envío.** El ciclo de la ASES va de marzo
+  2027 a febrero 2028: una ficha enviada en ene–feb de 2028 caería en otro año
+  que el resto del ciclo, y los filtros y KPIs del panel la separarían.
+  Candidato a spec antes de marzo.
+- **Las pruebas de envío fallan si la cuenta de prueba tiene fichas previas**, y
+  la limpieza de la suite borra las fichas de esa cuenta. Pruebas manuales
+  siempre con una cuenta propia.
+- El listado admin conserva `confirm`/`prompt` para aprobar y rechazar desde la
+  tabla; la revisión de la ficha ya usa un campo para el motivo.
+- `src/bg_login_wpg1.jpeg` quedó sin uso → limpieza de la spec 004.
 
 ## A5 — verificación contra Supabase local
 
@@ -50,6 +83,10 @@ Este archivo se actualiza al dejar el proyecto, no al empezar.
 ## Entorno local
 
 - `npx supabase start` (Docker Desktop abierto) · `npm run dev`
+- **Probar desde el teléfono en la red local:** en PowerShell,
+  `$env:NEXT_PUBLIC_SUPABASE_URL='http://<IP>:55321'; npm run dev` y abrir
+  `http://<IP>:3000`. La IP debe estar en `allowedDevOrigins` de
+  `next.config.ts` (hoy `192.168.1.44`; cambia si el router asigna otra).
 - `npm run db:reset` resetea y recrea usuarios:
   `e2e.formularios@gruposcout1.test` / `E2eTest123!` (user) ·
   `e2e.admin@gruposcout1.test` / `E2eAdmin123!` (admin)

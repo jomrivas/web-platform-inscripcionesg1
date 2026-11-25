@@ -1,6 +1,8 @@
-// app/admin/page.tsx
+// app/admin/page.tsx — Resumen del panel admin
+import Link from 'next/link';
 import React from 'react';
 import { createClient } from '@/lib/supabase-server';
+import { cx } from '@/components/ui/cx';
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
@@ -13,43 +15,58 @@ export default async function AdminDashboardPage() {
 
   const total = inscriptions?.length || 0;
   const adultos = inscriptions?.filter((i) => i.type === 'adulto').length || 0;
-  const beneficiarios =
-    inscriptions?.filter((i) => i.type === 'beneficiario').length || 0;
-  const pendientes =
-    inscriptions?.filter((i) => i.status === 'submitted').length || 0;
-  const aprobados =
-    inscriptions?.filter((i) => i.status === 'approved').length || 0;
+  const beneficiarios = inscriptions?.filter((i) => i.type === 'beneficiario').length || 0;
+  const pendientes = inscriptions?.filter((i) => i.status === 'submitted').length || 0;
+  const aprobados = inscriptions?.filter((i) => i.status === 'approved').length || 0;
 
   const cards = [
-    { label: 'Total Inscripciones', value: total, color: 'bg-blue-50 text-blue-700' },
-    { label: 'Adultos Voluntarios', value: adultos, color: 'bg-orange-50 text-orange-700' },
-    { label: 'Beneficiarios', value: beneficiarios, color: 'bg-purple-50 text-purple-700' },
-    { label: 'Pendientes de Revisión', value: pendientes, color: 'bg-yellow-50 text-yellow-700' },
-    { label: 'Aprobados', value: aprobados, color: 'bg-green-50 text-green-700' },
+    { label: 'Total', value: total },
+    { label: 'Beneficiarios', value: beneficiarios },
+    { label: 'Adultos voluntarios', value: adultos },
+    { label: 'Por revisar', value: pendientes, tone: 'warn' as const },
+    { label: 'Aprobadas', value: aprobados, tone: 'ok' as const },
   ];
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">
-        Dashboard - Año {currentYear}
-      </h2>
-      <p className="text-gray-600 mb-8">Resumen general de inscripciones</p>
+    <div className="flex max-w-5xl flex-col gap-6">
+      <div className="flex flex-col gap-0.5">
+        <span className="text-sm font-bold text-muted">Año de inscripción {currentYear}</span>
+        <h1 className="m-0 text-[28px] font-extrabold tracking-tight">Resumen</h1>
+      </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {cards.map((card) => (
-          <div key={card.label} className={`rounded-xl p-6 ${card.color}`}>
-            <p className="text-3xl font-bold">{card.value}</p>
-            <p className="text-sm font-medium mt-1">{card.label}</p>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
+        {cards.map((c) => (
+          <div
+            key={c.label}
+            className={cx(
+              'flex flex-col gap-1.5 rounded-card p-5',
+              c.tone === 'warn' ? 'bg-warn-soft' : c.tone === 'ok' ? 'bg-ok-soft' : 'bg-surface shadow-card',
+            )}
+          >
+            <span className={cx('text-sm font-bold', c.tone === 'warn' ? 'text-warn' : c.tone === 'ok' ? 'text-ok' : 'text-muted')}>
+              {c.label}
+            </span>
+            <span className={cx('text-[32px] font-extrabold tracking-tight', c.tone === 'warn' && 'text-warn-strong', c.tone === 'ok' && 'text-ok')}>
+              {c.value}
+            </span>
           </div>
         ))}
       </div>
 
-      <a
+      <Link
         href="/admin/listados"
-        className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        className="flex items-center justify-between gap-4 rounded-panel bg-brand p-5 text-on-brand no-underline hover:bg-brand-hover"
       >
-        Ver Listado Completo →
-      </a>
+        <span className="flex flex-col gap-0.5">
+          <span className="text-[17px] font-extrabold">Revisar inscripciones</span>
+          <span className="text-sm text-on-brand-muted">
+            {pendientes > 0 ? `${pendientes} por revisar` : 'Listado completo, filtros y exportación'}
+          </span>
+        </span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+      </Link>
     </div>
   );
 }

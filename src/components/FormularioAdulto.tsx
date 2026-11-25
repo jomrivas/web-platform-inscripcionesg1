@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import SignaturePad from './SignaturePad';
-import { FichaShell, StepError, firstStepWithError } from './ficha/FichaShell';
+import { FichaShell, StepError, firstStepWithError, type FichaVariant } from './ficha/FichaShell';
 
 export interface FormDataAdulto {
   // Control de ficha
@@ -96,6 +96,8 @@ interface FormularioAdultoProps {
   isLoading?: boolean;
   /** Errores por campo devueltos por el servidor (E3). */
   serverErrors?: Record<string, string[] | undefined>;
+  /** `admin` cuando se edita desde el panel (guarda en vez de enviar). */
+  variant?: FichaVariant;
 }
 
 // — Helpers de formulario —
@@ -230,6 +232,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
   onSubmit,
   isLoading = false,
   serverErrors,
+  variant = 'familia',
 }) => {
   const [formData, setFormData] = useState<FormDataAdulto>({
     nombre_completo: '',
@@ -418,6 +421,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
         onNext={handleNext}
         isLoading={isLoading}
         focusKey={focusKey}
+        variant={variant}
       >
       {/* Tab: Control de ficha */}
       {activeTab === 'ficha' && (

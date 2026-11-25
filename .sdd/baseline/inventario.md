@@ -114,3 +114,41 @@ formularios, Mis Inscripciones y panel admin completo.
 No existen `specs/public/` ni `specs/admin/`. No existe `global-setup.ts`
 (solo `auth.setup.ts` y `global-teardown.ts`). La cobertura declarada es
 mucho mayor que la real.
+
+## Actualización 2026-11-24 — spec 005 (rediseño UX/UI)
+
+Verificado contra el árbol y con tsc, lint, build y E2E locales.
+
+**Nuevo en el árbol**
+
+```
+app/icon.png · app/apple-icon.png            íconos desde el isotipo
+app/dashboard/nuevo-formulario/TipoSelector.tsx
+lib/ramas.ts                                  etiquetas visibles de rama (R5)
+src/components/ui/                            componentes base (9 archivos + index)
+src/components/ficha/FichaShell.tsx           fichas por pasos
+src/components/familia/                       AuthShell, AuthFooter, FamilyFrame,
+                                              InscripcionesList, textos.ts
+tests/e2e/specs/user/correo-tutor.spec.ts     A13
+public/brand/  ·  design/brand/               logo (publicado) y fuentes editables
+```
+
+**Cambia de estado**
+
+| Módulo | Antes | Ahora |
+|---|---|---|
+| Identidad visual | estilos por defecto de Tailwind | tokens (decisión 0004), Nunito, logo |
+| Fichas | pestañas | pasos con E1/E2/E3 |
+| Etiquetas de campos | sin `htmlFor` | asociadas (A8) |
+| Correo del tutor | opcional | obligatorio por tutor registrado (R9) |
+| Errores del servidor | solo "Datos inválidos" | se muestran en el campo y su paso |
+| Aprobar / rechazar | `prompt()` en la revisión | motivo en un campo del panel lateral; el listado conserva `prompt()` |
+
+**E2E:** 12 pruebas; 11 pasan. Falla `envía la ficha con tipo de ficha, rama
+y traslado de emergencia` por `[PENDIENTE-1]` (UNIQUE(dui) global; dos
+pruebas usan el mismo DUI). Las pruebas de envío fallan también si la cuenta
+de prueba tiene fichas previas (datos residuales).
+
+**Sin usar:** `src/bg_login_wpg1.jpeg` (la portada ya no usa foto de fondo).
+Candidato a la limpieza de la spec 004.
+

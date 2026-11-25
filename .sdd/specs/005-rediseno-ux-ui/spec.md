@@ -2,11 +2,12 @@
 id: 005
 slug: rediseno-ux-ui
 titulo: Rediseño UX/UI de toda la app con la identidad del Grupo Scout No. 1
-estado: aprobada
+estado: cerrada
 prioridad: alta
 creada: 2026-11-22
 aprobada: 2026-11-22
 enmendada: 2026-11-24 (ver §13)
+cerrada: 2026-11-24
 constitucion: [C2, C5, C7, C8, C9, C10, C11]
 depende: [002]
 bloquea: [promoción a producción (A7 de la 002)]
@@ -235,4 +236,19 @@ Salen del lienzo y quedan registrados para no perderlos:
     cierre.
   - Afiliación: **«miembro inscrito a la ASES»**.
   - Calendario: **inscripción ordinaria: marzo**. Desde abril es extraordinaria.
+
+**2026-11-24 — Cierre.** Implementada en tres commits (`5440764`, `07bb684` y el
+de la etapa 3). Criterios A1–A12 cumplidos, con estas notas:
+
+- **A1:** única excepción, el HTML del correo de confirmación en
+  `app/api/inscriptions/route.ts` (los clientes de correo necesitan colores en
+  línea).
+- **A7:** 11 de 12 pruebas pasan. La que falla lo hace igual antes y después
+  del rediseño: `[PENDIENTE-1]`, UNIQUE(dui) global con dos pruebas que usan el
+  mismo DUI.
+- **A11:** Mauricio aprobó dos fichas y rechazó una con motivo desde el panel,
+  contra Supabase local. El flujo de familia lo validó también desde su iPhone.
+- **Fuera del lienzo, a propósito:** historial en la revisión (§11), recuperar
+  contraseña, casilla de confirmación de datos, "¿Con quién vive?" y la ficha
+  de solo lectura en la revisión admin (se mantiene editable).
 

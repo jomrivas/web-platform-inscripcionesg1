@@ -2,7 +2,31 @@
 import React from 'react';
 import { createClient } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import LogoutButton from '@/components/LogoutButton';
+import { AdminSidebar } from '@/components/ui/AdminSidebar';
+import type { NavItem } from '@/components/ui/BottomNav';
+
+const icon = (d: React.ReactNode) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {d}
+  </svg>
+);
+
+const NAV: NavItem[] = [
+  {
+    href: '/admin',
+    label: 'Resumen',
+    exact: true,
+    icon: icon(<><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></>),
+  },
+  {
+    href: '/admin/listados',
+    label: 'Inscripciones',
+    also: ['/admin/inscripciones/'],
+    icon: icon(<><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M9 8h6M9 12h6M9 16h4" /></>),
+  },
+];
 
 export default async function AdminLayout({
   children,
@@ -27,30 +51,22 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-gray-900 text-white">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="font-bold">Panel Administrativo</h1>
-            <p className="text-xs text-gray-400">
-              Grupo Scout No. 1 &quot;Los Intrépidos&quot;
-            </p>
-          </div>
-          <nav className="flex items-center gap-6 text-sm">
-            <a href="/admin" className="hover:text-blue-400">
-              Dashboard
-            </a>
-            <a href="/admin/listados" className="hover:text-blue-400">
-              Listados
-            </a>
-            <a href="/dashboard" className="hover:text-blue-400">
-              Vista Usuario
-            </a>
+    <div className="flex min-h-dvh flex-col bg-canvas lg:flex-row">
+      <AdminSidebar
+        items={NAV}
+        footer={
+          <div className="flex flex-row flex-wrap gap-1 lg:flex-col">
+            <Link
+              href="/dashboard"
+              className="flex min-h-11 items-center rounded-xl px-3 text-sm font-bold text-ink-soft hover:bg-canvas"
+            >
+              Vista familia
+            </Link>
             <LogoutButton />
-          </nav>
-        </div>
-      </header>
-      <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
+          </div>
+        }
+      />
+      <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">{children}</main>
     </div>
   );
 }

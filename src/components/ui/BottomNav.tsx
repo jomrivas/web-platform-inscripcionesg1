@@ -6,9 +6,17 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { cx } from './cx';
 
-export type NavItem = { href: string; label: string; icon: ReactNode; exact?: boolean };
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: ReactNode;
+  exact?: boolean;
+  /** Otras rutas que también marcan este ítem como actual. */
+  also?: string[];
+};
 
-export function isActive(pathname: string, item: Pick<NavItem, 'href' | 'exact'>) {
+export function isActive(pathname: string, item: Pick<NavItem, 'href' | 'exact' | 'also'>) {
+  if (item.also?.some((p) => pathname.startsWith(p))) return true;
   return item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/');
 }
 

@@ -9,6 +9,10 @@ import { Stepper } from '@/components/ui/Stepper';
 
 export type FichaStep = { id: string; label: string; description?: string };
 
+/** `familia`: pantalla completa con barra de salida (tablero 4).
+ *  `admin`: embebida en la revisión del panel; guarda en vez de enviar. */
+export type FichaVariant = 'familia' | 'admin';
+
 /** Primer paso que contiene alguno de los errores. */
 export function firstStepWithError(
   steps: readonly FichaStep[],
@@ -28,6 +32,7 @@ export function FichaShell({
   focusKey,
   exitHref = '/dashboard',
   backHref = '/dashboard/nuevo-formulario',
+  variant = 'familia',
   children,
 }: {
   title: string;
@@ -42,6 +47,7 @@ export function FichaShell({
   exitHref?: string;
   /** Destino de "Atrás" en el primer paso. */
   backHref?: string;
+  variant?: FichaVariant;
   children: ReactNode;
 }) {
   const index = Math.max(0, steps.findIndex((s) => s.id === current));
@@ -56,9 +62,10 @@ export function FichaShell({
       firstRender.current = false;
       return;
     }
-    window.scrollTo({ top: 0 });
+    if (variant === 'familia') window.scrollTo({ top: 0 });
+    else rootRef.current?.scrollIntoView({ block: 'start' });
     rootRef.current?.querySelector<HTMLElement>('[data-step-title]')?.focus({ preventScroll: true });
-  }, [current]);
+  }, [current, variant]);
 
   // Foco al primer campo con error, o al primer mensaje de error del paso.
   useEffect(() => {
@@ -75,7 +82,19 @@ export function FichaShell({
   }, [focusKey]);
 
   return (
-    <div ref={rootRef} className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col bg-surface">
+    <div
+      ref={rootRef}
+      className={
+        variant === 'familia'
+          ? 'mx-auto flex min-h-dvh w-full max-w-2xl flex-col bg-surface'
+          : 'flex w-full scroll-mt-6 flex-col overflow-clip rounded-card bg-surface shadow-card'
+      }
+    >
+      {variant === 'admin' ? (
+        <div className="px-6 pt-5">
+          <h2 className="m-0 text-[13px] font-extrabold tracking-wider text-muted uppercase">{title}</h2>
+        </div>
+      ) : (
       <div className="flex items-center justify-between gap-2 px-3 pt-4">
         <Link
           href={exitHref}
@@ -89,6 +108,7 @@ export function FichaShell({
         <h1 className="text-center text-[15px] font-extrabold">{title}</h1>
         <span aria-hidden="true" className="size-11" />
       </div>
+      )}
 
       <Stepper
         steps={steps.map((s) => s.label)}
@@ -99,16 +119,26 @@ export function FichaShell({
 
       <div className="flex flex-1 flex-col gap-5 px-6 pt-5 pb-8">
         <div className="flex flex-col gap-1">
-          <h2 data-step-title tabIndex={-1} className="text-2xl font-extrabold tracking-tight outline-none">
-            {step.label}
-          </h2>
+          {variant === 'admin' ? (
+            <h3 data-step-title tabIndex={-1} className="m-0 text-xl font-extrabold tracking-tight outline-none">
+              {step.label}
+            </h3>
+          ) : (
+            <h2 data-step-title tabIndex={-1} className="text-2xl font-extrabold tracking-tight outline-none">
+              {step.label}
+            </h2>
+          )}
           {step.description && <p className="text-[15px] leading-normal text-muted">{step.description}</p>}
         </div>
         {children}
       </div>
 
       <div className="sticky bottom-0 grid grid-cols-[1fr_2fr] gap-3 border-t border-line bg-surface px-6 pt-3.5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-        {index === 0 ? (
+        {index === 0 && variant === 'admin' ? (
+          <Button variant="secondary" size="lg" disabled>
+            Atrás
+          </Button>
+        ) : index === 0 ? (
           <ButtonLink href={backHref} variant="secondary" size="lg">
             Atrás
           </ButtonLink>
@@ -119,7 +149,13 @@ export function FichaShell({
         )}
         {isLast ? (
           <Button type="submit" size="lg" disabled={isLoading}>
-            {isLoading ? 'Enviando...' : 'Enviar Formulario'}
+            {variant === 'admin'
+              ? isLoading
+                ? 'Guardando...'
+                : 'Guardar cambios'
+              : isLoading
+                ? 'Enviando...'
+                : 'Enviar Formulario'}
           </Button>
         ) : (
           <Button size="lg" onClick={onNext}>

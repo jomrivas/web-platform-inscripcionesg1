@@ -203,6 +203,9 @@ Listados (/admin/listados)
 
 **Beneficiario** — campos requeridos: nombre completo, fecha de
 nacimiento, dirección, **y al menos un tutor** (nombre de madre o padre).
+Cada tutor registrado lleva **su correo, obligatorio y válido** (spec 005,
+R9): si hay madre, su correo; si hay padre, el suyo. Validado en
+`lib/validators.ts` y reflejado en el formulario.
 
 ---
 
@@ -210,36 +213,51 @@ nacimiento, dirección, **y al menos un tutor** (nombre de madre o padre).
 
 ```
 app/
-├── page.tsx                              Landing
-├── layout.tsx                            Layout raíz + metadata
-├── login/page.tsx
-├── signup/page.tsx
+├── page.tsx                              Portada pública (pantalla partida)
+├── layout.tsx                            Layout raíz: Nunito (next/font) + metadata
+├── globals.css                           Tokens de diseño (@theme) y estilos base
+├── icon.png · apple-icon.png · favicon.ico   Íconos desde el isotipo
+├── login/page.tsx                        Ingreso (AuthShell)
+├── signup/page.tsx                       Registro (AuthShell)
 ├── dashboard/
-│   ├── layout.tsx                        Header + verificación de sesión
-│   ├── page.tsx                          Selector (Nuevo Formulario / Mis Inscripciones)
+│   ├── layout.tsx                        Sesión + FamilyFrame (encabezado, navegación)
+│   ├── page.tsx                          Inicio: nueva inscripción + tus inscripciones
 │   ├── nuevo-formulario/
-│   │   ├── page.tsx                      Selector Adulto / Beneficiario
-│   │   ├── adulto/page.tsx
+│   │   ├── page.tsx · TipoSelector.tsx   ¿Quién se inscribe? (beneficiario / adulto)
+│   │   ├── adulto/page.tsx               Ficha por pasos + errores del servidor
 │   │   └── beneficiario/page.tsx
-│   └── mis-inscripciones/page.tsx
+│   └── mis-inscripciones/page.tsx        Lista + confirmación de envío (?success=true)
 ├── admin/
-│   ├── layout.tsx                        Header + verificación de rol admin
-│   ├── page.tsx                          Dashboard con KPIs
-│   └── listados/page.tsx                 Tabla filtrable + exportación
+│   ├── layout.tsx                        Rol admin + AdminSidebar
+│   ├── page.tsx                          Resumen con KPIs
+│   ├── listados/page.tsx                 Tabla filtrable, acciones y exportación
+│   └── inscripciones/[id]/page.tsx       Revisión: estado, motivo y ficha editable
 └── api/
     ├── inscriptions/route.ts             POST — crear inscripción + email
+    ├── inscriptions/[id]/route.ts        PATCH estado · PUT ficha (admin)
     └── export/route.ts                   GET — exportar CSV/Excel/PDF/SQL
 
-components/
-├── SignaturePad.tsx                      Canvas de firma (dibujar o subir imagen)
-├── FormularioAdulto.tsx                  Ficha de Adulto Voluntario
-├── FormularioBeneficiario.tsx            Ficha de Beneficiario
+src/components/
+├── ui/                                   Componentes base (spec 005): Button,
+│                                         Field/Input/Select/Textarea, Chips
+│                                         (estado y rama), Stepper, Card,
+│                                         BrandLogo, BottomNav, AdminSidebar
+├── ficha/FichaShell.tsx                  Armazón de fichas por pasos (familia/admin)
+├── familia/                              AuthShell, FamilyFrame, InscripcionesList,
+│                                         textos.ts (textos fijos del producto)
+├── FormularioAdulto.tsx                  Ficha de Adulto Voluntario (7 pasos)
+├── FormularioBeneficiario.tsx            Ficha de Beneficiario (5 pasos)
+├── EditorInscripcion.tsx                 Revisión admin
+├── SignaturePad.tsx                      Firma (dibujar o subir imagen)
 └── LogoutButton.tsx
 
 lib/
 ├── supabase.ts                           Cliente Supabase (browser)
-└── supabase-server.ts                    Cliente Supabase (server components)
+├── supabase-server.ts                    Cliente Supabase (server components)
+├── validators.ts                         Validación Zod server-side (C5)
+└── ramas.ts                              Etiquetas visibles de rama (R5)
 
+public/brand/                             Logo, isotipo y stickers (SVG y PNG)
 proxy.ts                                  Protección de rutas + refresco de sesión
 ```
 
@@ -250,10 +268,32 @@ proxy.ts                                  Protección de rutas + refresco de ses
 - **`@supabase/ssr`** en vez de solo `@supabase/supabase-js`: necesario
   para manejar cookies de sesión correctamente en Server Components y
   Route Handlers del App Router.
-- **Locators sin `htmlFor`/`id`**: los `<label>` de los formularios no
-  están asociados por atributo a su `<input>`; el atributo `name` (que
-  coincide 1:1 con la columna en la base de datos) se usa como identificador
-  estable tanto en el código como en las pruebas automatizadas.
+- **Etiquetas asociadas con `htmlFor`/`id`** (spec 005): cada `<label>` está
+  ligado a su control, y el `id` sale del `name`. El `name` sigue siendo
+  1:1 con la columna de la base y el selector estable de las pruebas (C8);
+  nunca se renombra.
+- **Identidad visual** (decisión 0004): azul de la pañoleta `#0E1754`,
+  blanco y Nunito; colores de rama solo como punto + tinte, nunca como
+  color de texto. Todo color, radio y sombra vive en `app/globals.css`
+  (`@theme`); los componentes usan las clases que genera Tailwind. Los
+  estilos base van en `@layer base` para que las utilidades los puedan
+  sobrescribir. Única excepción: el HTML del correo de confirmación, que
+  necesita colores en línea.
+- **Fichas por pasos, no pestañas**: cada pestaña anterior es un paso, en el
+  mismo orden. El indicador de pasos es clicable y cada paso conserva el
+  nombre exacto de la pestaña (`Datos Personales`, `Firmas`…): las pruebas
+  navegan por esos nombres. "Siguiente" valida el paso actual (E1); el
+  envío valida todo y los errores del servidor abren el paso del campo
+  (E3). Sin `required` nativo: la validación la hacen la app y el servidor.
+- **Mis inscripciones en tarjetas con semántica de tabla** (`role=table/row/
+  cell`): en móvil se ven como tarjetas, pero se leen como tabla.
+- **Sin "guardar borrador"**: la ficha se llena, firma y envía en una sola
+  sesión (decisión de Mauricio, spec 005 §4).
+- **Desarrollo desde el teléfono**: `allowedDevOrigins` en `next.config.ts`
+  (solo afecta `next dev`). Para probar en la red local, arrancar con
+  `NEXT_PUBLIC_SUPABASE_URL=http://<IP-de-la-laptop>:55321`. Ingreso y
+  registro llevan `method="post"`: si el JavaScript no carga, las
+  credenciales no viajan en la URL.
 - **Vista con `SECURITY INVOKER`**: corregido explícitamente porque
   Supabase marca `SECURITY DEFINER` (default de Postgres) como riesgo de
   seguridad — con `INVOKER`, la vista respeta el RLS del usuario que
@@ -280,6 +320,8 @@ autor para proyectos de automatización).
 - Cobertura actual: proxy/redirecciones, login/signup, ambos
   formularios (validaciones + firma + envío), Mis Inscripciones, panel
   admin (KPIs, filtros, búsqueda, exportación CSV/SQL).
+- Correo obligatorio por tutor (spec 005, A13):
+  `specs/user/correo-tutor.spec.ts`, en cliente y directo contra la API.
 - Pendiente de cobertura: acciones de aceptar/rechazar inscripción (no
   implementadas aún en la UI), exportación Excel/PDF, edición de
   inscripciones en estado `draft`.

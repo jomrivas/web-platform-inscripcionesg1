@@ -2,7 +2,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
+import { Button } from '@/components/ui/Button';
+import { RamaChip, StatusChip } from '@/components/ui/Chips';
+import { cx } from '@/components/ui/cx';
+import { ramaLabel as etiquetaRama } from '@/lib/ramas';
 
 interface InscriptionRow {
   id: string;
@@ -16,21 +21,7 @@ interface InscriptionRow {
   created_at: string;
 }
 
-const RAMA_LABELS: Record<string, string> = {
-  manada_7_10: 'Manada (7-10)',
-  scouts_11_14: 'Scouts (11-14)',
-  caminantes_15_17: 'Caminantes (15-17)',
-  rovers_18_21: 'Rovers (18-21)',
-};
-
-const STATUS_META: Record<string, { label: string; cls: string }> = {
-  draft: { label: 'Borrador', cls: 'bg-gray-100 text-gray-700' },
-  submitted: { label: 'Pendiente', cls: 'bg-yellow-100 text-yellow-800' },
-  approved: { label: 'Aprobado', cls: 'bg-green-100 text-green-800' },
-  rejected: { label: 'Rechazado', cls: 'bg-red-100 text-red-700' },
-};
-
-const ramaLabel = (rama: string) => RAMA_LABELS[rama] || rama || '-';
+const ramaLabel = (rama: string) => etiquetaRama(rama) || '-';
 
 function mapInscriptions(
   data: Array<Record<string, unknown>>
@@ -216,81 +207,94 @@ export default function ListadosAdminPage() {
     window.URL.revokeObjectURL(url);
   };
 
-  const selectCls = 'px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900';
+  const selectCls =
+    'h-11 rounded-xl border-[1.5px] border-line bg-surface px-3 text-sm font-bold text-ink-soft';
+
+  const total = filteredRows.length;
+  const kpis = [
+    { label: 'Total', value: total },
+    { label: 'Beneficiarios', value: filteredRows.filter((r) => r.type === 'beneficiario').length },
+    { label: 'Adultos', value: filteredRows.filter((r) => r.type === 'adulto').length },
+    { label: 'Por revisar', value: filteredRows.filter((r) => r.status === 'submitted').length, warn: true },
+  ];
+
+  const tipoBtn = (value: string, label: string) => (
+    <button
+      type="button"
+      aria-pressed={filterType === value}
+      onClick={() => {
+        setLoading(true);
+        setFilterType(value);
+      }}
+      className={cx(
+        'h-11 rounded-[10px] px-3.5 text-sm',
+        filterType === value ? 'bg-surface font-extrabold text-brand shadow-card' : 'font-bold text-ink-soft hover:text-ink',
+      )}
+    >
+      {label}
+    </button>
+  );
+
+  const accion =
+    'inline-flex min-h-11 items-center rounded-lg px-2.5 text-[13px] font-extrabold transition-colors';
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
-        Listado de Inscripciones
-      </h2>
-
-      {/* Filtros */}
-      <div className="bg-white border rounded-lg p-4 mb-6 flex flex-wrap gap-4 items-end">
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            Año
-          </label>
-          <select
-            value={filterYear}
-            onChange={(e) => {
-              setLoading(true);
-              setFilterYear(e.target.value);
-            }}
-            className={selectCls}
-          >
-            <option value="all">Todos</option>
-            {Array.from(
-              { length: 4 },
-              (_, i) => new Date().getFullYear() - i
-            ).map((y) => (
-              <option key={y} value={String(y)}>
-                {y}
-              </option>
-            ))}
-          </select>
+    <div className="flex max-w-6xl flex-col gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-bold text-muted">
+            {filterYear === 'all' ? 'Todos los años' : `Año de inscripción ${filterYear}`}
+          </span>
+          <h1 className="m-0 text-[28px] font-extrabold tracking-tight">Inscripciones</h1>
         </div>
-
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            Tipo
-          </label>
-          <select
-            value={filterType}
-            onChange={(e) => {
-              setLoading(true);
-              setFilterType(e.target.value);
-            }}
-            className={selectCls}
-          >
-            <option value="all">Todos</option>
-            <option value="adulto">Adulto</option>
-            <option value="beneficiario">Beneficiario</option>
-          </select>
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Exportar">
+          <span className="text-sm font-bold text-muted">Exportar</span>
+          {[
+            ['csv', 'CSV'],
+            ['excel', 'Excel'],
+            ['pdf', 'PDF'],
+            ['sql', 'Respaldo SQL'],
+          ].map(([f, l]) => (
+            <Button key={f} variant="secondary" className="h-11 px-4 text-sm" onClick={() => handleExport(f)}>
+              {l}
+            </Button>
+          ))}
         </div>
+      </div>
 
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            Rama
-          </label>
-          <select
-            value={filterRama}
-            onChange={(e) => setFilterRama(e.target.value)}
-            className={selectCls}
-          >
-            <option value="all">Todas</option>
-            {ramaOptions.map((r) => (
-              <option key={r} value={r}>
-                {ramaLabel(r)}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {kpis.map((k) => (
+          <div key={k.label} className={cx('flex flex-col gap-1.5 rounded-card p-5', k.warn ? 'bg-warn-soft' : 'bg-surface shadow-card')}>
+            <span className={cx('text-sm font-bold', k.warn ? 'text-warn' : 'text-muted')}>{k.label}</span>
+            <span className={cx('text-[32px] font-extrabold tracking-tight', k.warn && 'text-warn-strong')}>{k.value}</span>
+          </div>
+        ))}
+      </div>
 
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            Estado
-          </label>
+      <div className="flex flex-col overflow-hidden rounded-card bg-surface shadow-card">
+        {/* Filtros */}
+        <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-4">
+          <div className="relative flex min-w-60 flex-1">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="pointer-events-none absolute top-3.5 left-3.5 text-muted">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-4-4" />
+            </svg>
+            <input
+              type="search"
+              aria-label="Buscar por nombre, DUI o correo"
+              placeholder="Buscar por nombre, DUI o correo"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-11 w-full rounded-xl border-[1.5px] border-line bg-surface pr-3.5 pl-10.5 text-[15px] text-ink focus:border-brand"
+            />
+          </div>
+          <div className="flex gap-1 rounded-xl bg-canvas p-1" role="group" aria-label="Tipo">
+            {tipoBtn('all', 'Todos')}
+            {tipoBtn('beneficiario', 'Beneficiarios')}
+            {tipoBtn('adulto', 'Adultos')}
+          </div>
           <select
+            aria-label="Estado"
             value={filterStatus}
             onChange={(e) => {
               setLoading(true);
@@ -298,142 +302,111 @@ export default function ListadosAdminPage() {
             }}
             className={selectCls}
           >
-            <option value="all">Todos</option>
+            <option value="all">Todos los estados</option>
             <option value="draft">Borrador</option>
-            <option value="submitted">Pendiente</option>
-            <option value="approved">Aprobado</option>
-            <option value="rejected">Rechazado</option>
+            <option value="submitted">En revisión</option>
+            <option value="approved">Aprobada</option>
+            <option value="rejected">Rechazada</option>
+          </select>
+          <select aria-label="Rama" value={filterRama} onChange={(e) => setFilterRama(e.target.value)} className={selectCls}>
+            <option value="all">Todas las ramas</option>
+            {ramaOptions.map((r) => (
+              <option key={r} value={r}>
+                {ramaLabel(r)}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Año"
+            value={filterYear}
+            onChange={(e) => {
+              setLoading(true);
+              setFilterYear(e.target.value);
+            }}
+            className={selectCls}
+          >
+            <option value="all">Todos los años</option>
+            {Array.from({ length: 4 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+              <option key={y} value={String(y)}>
+                {y}
+              </option>
+            ))}
           </select>
         </div>
 
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            Buscar
-          </label>
-          <input
-            type="text"
-            placeholder="Nombre, DUI o email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900"
-          />
-        </div>
-      </div>
-
-      {/* Botones de exportación */}
-      <div className="flex gap-2 mb-6">
-        <button
-          onClick={() => handleExport('csv')}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
-        >
-          📊 CSV
-        </button>
-        <button
-          onClick={() => handleExport('excel')}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700"
-        >
-          📈 Excel
-        </button>
-        <button
-          onClick={() => handleExport('pdf')}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
-        >
-          📄 PDF
-        </button>
-        <button
-          onClick={() => handleExport('sql')}
-          className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm hover:bg-gray-800"
-        >
-          🗄️ SQL Backup
-        </button>
-      </div>
-
-      {/* Tabla */}
-      {loading ? (
-        <p className="text-gray-500">Cargando...</p>
-      ) : (
-        <div className="bg-white border rounded-lg overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Nombre</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Identificación</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Email</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Rama</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Tipo</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Año</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Estado</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRows.map((row) => {
-                const meta = STATUS_META[row.status] || {
-                  label: row.status,
-                  cls: 'bg-gray-100 text-gray-700',
-                };
-                return (
-                  <tr key={row.id} className="border-b last:border-0">
-                    <td className="px-4 py-3">{row.nombre || '-'}</td>
-                    <td className="px-4 py-3">{row.identificacion || '-'}</td>
-                    <td className="px-4 py-3">{row.email_contacto || '-'}</td>
-                    <td className="px-4 py-3">{ramaLabel(row.rama)}</td>
-                    <td className="px-4 py-3">
-                      {row.type === 'adulto' ? 'Adulto' : 'Beneficiario'}
+        {/* Tabla: se desplaza dentro de su caja en pantallas angostas (E5) */}
+        {loading ? (
+          <p role="status" className="m-0 px-5 py-8 text-center text-muted">
+            Cargando...
+          </p>
+        ) : (
+          <div className="relative overflow-x-auto">
+            <table className="w-full min-w-240 border-collapse text-[15px]">
+              <thead>
+                <tr className="text-left text-[13px] tracking-wide text-muted uppercase">
+                  <th className="px-5 py-3.5 font-extrabold">Nombre</th>
+                  <th className="px-3 py-3.5 font-extrabold">Tipo</th>
+                  <th className="px-3 py-3.5 font-extrabold">Rama</th>
+                  <th className="px-3 py-3.5 font-extrabold">Estado</th>
+                  <th className="px-3 py-3.5 font-extrabold">Identificación</th>
+                  <th className="px-3 py-3.5 font-extrabold">Correo</th>
+                  <th className="px-3 py-3.5 font-extrabold">Enviada</th>
+                  <th className="relative px-5 py-3.5">
+                    <span className="sr-only">Acciones</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRows.map((row) => (
+                  <tr key={row.id} className="border-t border-line-soft align-middle">
+                    <td className="min-w-44 px-5 py-3.5 font-extrabold">{row.nombre || '-'}</td>
+                    <td className="px-3 py-3.5 text-ink-soft">{row.type === 'adulto' ? 'Adulto' : 'Beneficiario'}</td>
+                    <td className="px-3 py-3.5">{row.rama ? <RamaChip value={row.rama} /> : <span className="text-muted">-</span>}</td>
+                    <td className="px-3 py-3.5">
+                      <StatusChip status={row.status} />
                     </td>
-                    <td className="px-4 py-3">{row.inscription_year}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${meta.cls}`}
-                      >
-                        {meta.label}
-                      </span>
+                    <td className="px-3 py-3.5 text-ink-soft">{row.identificacion || '-'}</td>
+                    <td className="max-w-56 truncate px-3 py-3.5 text-ink-soft" title={row.email_contacto}>
+                      {row.email_contacto || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <a
-                        href={`/admin/inscripciones/${row.id}`}
-                        className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 mr-1 inline-block"
-                      >
-                        Editar
-                      </a>
-                      {row.status === 'submitted' && (
-                        <button
-                          onClick={() => handleStatusChange(row.id, 'approved')}
-                          className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 mr-1"
-                        >
-                          Aprobar
-                        </button>
-                      )}
-                      {row.status !== 'rejected' ? (
-                        <button
-                          onClick={() => handleStatusChange(row.id, 'rejected')}
-                          className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
-                        >
-                          Rechazar
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleStatusChange(row.id, 'submitted')}
-                          className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
-                        >
-                          Reabrir
-                        </button>
-                      )}
+                    <td className="px-3 py-3.5 whitespace-nowrap text-ink-soft">
+                      {new Date(row.created_at).toLocaleDateString('es-SV', { day: 'numeric', month: 'short' })}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex flex-nowrap justify-end gap-1">
+                        <Link href={`/admin/inscripciones/${row.id}`} className={cx(accion, 'text-brand hover:bg-brand-soft')}>
+                          {row.status === 'submitted' ? 'Revisar' : 'Ver'}
+                        </Link>
+                        {row.status === 'submitted' && (
+                          <button type="button" onClick={() => handleStatusChange(row.id, 'approved')} className={cx(accion, 'text-ok hover:bg-ok-soft')}>
+                            Aprobar
+                          </button>
+                        )}
+                        {row.status !== 'rejected' ? (
+                          <button type="button" onClick={() => handleStatusChange(row.id, 'rejected')} className={cx(accion, 'text-danger hover:bg-danger-soft')}>
+                            Rechazar
+                          </button>
+                        ) : (
+                          <button type="button" onClick={() => handleStatusChange(row.id, 'submitted')} className={cx(accion, 'text-warn hover:bg-warn-soft')}>
+                            Reabrir
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
-                );
-              })}
-              {filteredRows.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="text-center py-8 text-gray-500">
-                    No hay registros con estos filtros
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+                ))}
+                {filteredRows.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="px-5 py-10 text-center text-muted">
+                      No hay registros con estos filtros
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
