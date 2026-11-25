@@ -13,10 +13,13 @@ export default function NuevoFormularioBeneficiarioPage() {
   const supabase = createClient();
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  // Errores por campo del servidor: la ficha abre el paso del campo (E3)
+  const [serverErrors, setServerErrors] = useState<Record<string, string[] | undefined>>();
 
   const handleSubmit = async (formData: FormDataBeneficiario) => {
     setIsLoading(true);
     setSubmitError('');
+    setServerErrors(undefined);
 
     try {
       const {
@@ -41,6 +44,7 @@ export default function NuevoFormularioBeneficiarioPage() {
       const result = await response.json();
 
       if (!response.ok) {
+        if (result.details) setServerErrors(result.details);
         throw new Error(result.error || 'Error al enviar el formulario');
       }
 
@@ -57,11 +61,13 @@ export default function NuevoFormularioBeneficiarioPage() {
   return (
     <div>
       {submitError && (
-        <div className="max-w-4xl mx-auto mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {submitError}
+        <div className="mx-auto max-w-2xl px-6 pt-4">
+          <p role="alert" className="m-0 rounded-control bg-danger-soft px-4 py-3 text-sm font-bold text-danger">
+            {submitError}
+          </p>
         </div>
       )}
-      <FormularioBeneficiario onSubmit={handleSubmit} isLoading={isLoading} />
+      <FormularioBeneficiario onSubmit={handleSubmit} isLoading={isLoading} serverErrors={serverErrors} />
     </div>
   );
 }

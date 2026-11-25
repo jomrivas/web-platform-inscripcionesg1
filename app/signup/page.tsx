@@ -3,7 +3,11 @@
 
 import React, { useState } from 'react';
 import { createClient } from '@/lib/supabase';
-import bgLogin from '@/bg_login_wpg1.jpeg';
+import Link from 'next/link';
+import { AuthFooter } from '@/components/familia/AuthFooter';
+import { AuthShell } from '@/components/familia/AuthShell';
+import { Button, ButtonLink } from '@/components/ui/Button';
+import { Field, Input } from '@/components/ui/Field';
 
 export default function SignupPage() {
   const supabase = createClient();
@@ -51,115 +55,93 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div
-        className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat px-4"
-        style={{ backgroundImage: `url(${bgLogin.src})` }}
-      >
-        <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
-        <div className="relative z-10 max-w-md w-full bg-white p-8 rounded-lg shadow-md text-center">
-          <div className="text-5xl mb-4">✅</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            ¡Cuenta creada!
-          </h2>
-          <p className="text-gray-600 mb-6">
+      <AuthShell>
+        <div className="flex flex-col items-center gap-4 rounded-panel bg-surface p-8 text-center shadow-raised">
+          <span className="flex size-16 items-center justify-center rounded-full bg-ok-soft text-ok">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12l5 5 9-10" />
+            </svg>
+          </span>
+          <h1 className="m-0 text-2xl font-black">¡Cuenta creada!</h1>
+          <p className="m-0 text-[15px] leading-normal text-muted">
             Revisa tu correo para confirmar tu cuenta antes de iniciar sesión.
           </p>
-          <a
-            href="/login"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
+          <ButtonLink href="/login" size="lg" fullWidth>
             Ir a Iniciar Sesión
-          </a>
+          </ButtonLink>
         </div>
-      </div>
+        <AuthFooter />
+      </AuthShell>
     );
   }
 
+  const campo = (
+    id: string,
+    label: string,
+    props: React.ComponentProps<'input'>,
+    hint?: string,
+  ) => (
+    <Field label={label} id={id} hint={hint}>
+      {(a) => <Input required {...props} {...a} />}
+    </Field>
+  );
+
   return (
-    <div
-      className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat px-4"
-      style={{ backgroundImage: `url(${bgLogin.src})` }}
-    >
-      <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
-      <div className="relative z-10 max-w-md w-full bg-white p-8 rounded-lg shadow-md">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Crear Cuenta</h1>
-          <p className="text-gray-600 mt-2">
-            Grupo Scout No. 1 &quot;Los Intrépidos&quot; - Inscripciones
-          </p>
-        </div>
-
-        <form onSubmit={handleSignup} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Correo Electrónico
-            </label>
-            <input
-              type="email"
-              name="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-              placeholder="tu@correo.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              name="new-password"
-              autoComplete="new-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-              placeholder="Mínimo 6 caracteres"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Confirmar Contraseña
-            </label>
-            <input
-              type="password"
-              name="confirm-password"
-              autoComplete="new-password"
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-              placeholder="••••••••"
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium"
-          >
-            {loading ? 'Creando cuenta...' : 'Registrarme'}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-gray-600 mt-6">
-          ¿Ya tienes cuenta?{' '}
-          <a href="/login" className="text-blue-600 hover:underline font-medium">
-            Inicia sesión
-          </a>
+    <AuthShell>
+      <div className="flex flex-col gap-1">
+        <h1 className="m-0 text-[22px] font-extrabold lg:text-3xl lg:font-black lg:tracking-tight">Crea tu cuenta</h1>
+        <p className="m-0 text-[15px] leading-normal text-muted">
+          Con tu correo y una contraseña podrás llenar las fichas de tu familia.
         </p>
       </div>
-    </div>
+
+      <form onSubmit={handleSignup} method="post" className="flex flex-col gap-5">
+        {campo('email', 'Correo electrónico', {
+          type: 'email',
+          name: 'email',
+          autoComplete: 'email',
+          value: email,
+          onChange: (e) => setEmail(e.target.value),
+          placeholder: 'tu@correo.com',
+        })}
+        {campo(
+          'new-password',
+          'Contraseña',
+          {
+            type: 'password',
+            name: 'new-password',
+            autoComplete: 'new-password',
+            value: password,
+            onChange: (e) => setPassword(e.target.value),
+          },
+          'Mínimo 6 caracteres',
+        )}
+        {campo('confirm-password', 'Confirmar contraseña', {
+          type: 'password',
+          name: 'confirm-password',
+          autoComplete: 'new-password',
+          value: confirmPassword,
+          onChange: (e) => setConfirmPassword(e.target.value),
+        })}
+
+        {error && (
+          <p role="alert" className="m-0 rounded-control bg-danger-soft px-4 py-3 text-sm font-bold text-danger">
+            {error}
+          </p>
+        )}
+
+        <Button type="submit" size="lg" fullWidth disabled={loading}>
+          {loading ? 'Creando cuenta...' : 'Registrarme'}
+        </Button>
+      </form>
+
+      <p className="m-0 text-center text-[15px] text-muted">
+        ¿Ya tienes cuenta?{' '}
+        <Link href="/login" className="inline-flex min-h-11 items-center font-extrabold text-brand no-underline hover:underline">
+          Inicia sesión
+        </Link>
+      </p>
+      <AuthFooter />
+    </AuthShell>
   );
 }

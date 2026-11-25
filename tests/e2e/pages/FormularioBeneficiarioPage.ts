@@ -66,13 +66,24 @@ export class FormularioBeneficiarioPage {
     }
   }
 
-  async fillTutor(data: { madre_nombre?: string; padre_nombre?: string }) {
+  async fillTutor(data: {
+    madre_nombre?: string;
+    madre_email?: string;
+    padre_nombre?: string;
+    padre_email?: string;
+  }) {
     await this.openTab('Padres/Tutores');
     if (data.madre_nombre) {
       await this.field('madre_nombre').fill(data.madre_nombre);
     }
+    if (data.madre_email) {
+      await this.field('madre_email').fill(data.madre_email);
+    }
     if (data.padre_nombre) {
       await this.field('padre_nombre').fill(data.padre_nombre);
+    }
+    if (data.padre_email) {
+      await this.field('padre_email').fill(data.padre_email);
     }
   }
 

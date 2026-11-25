@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import SignaturePad from './SignaturePad';
+import { FichaShell, StepError, firstStepWithError } from './ficha/FichaShell';
 
 export interface FormDataAdulto {
   // Control de ficha
@@ -93,6 +94,8 @@ interface FormularioAdultoProps {
   initialData?: Partial<FormDataAdulto>;
   onSubmit: (data: FormDataAdulto) => Promise<void>;
   isLoading?: boolean;
+  /** Errores por campo devueltos por el servidor (E3). */
+  serverErrors?: Record<string, string[] | undefined>;
 }
 
 // — Helpers de formulario —
@@ -103,11 +106,15 @@ const toStrArray = (v: unknown): string[] => {
   return [];
 };
 
-const inputCls = (hasError?: string) =>
-  `w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900 ${
-    hasError ? 'border-red-500' : 'border-gray-300'
-  }`;
+// Estilo de control con tokens (spec 005). El borde de error lo pone
+// aria-invalid, que inyecta <Field>.
+const inputCls = () =>
+  'w-full min-w-0 rounded-control border-[1.5px] border-line bg-surface px-4 text-base text-ink ' +
+  'transition-colors focus:border-brand focus:outline-3 focus:outline-brand-soft focus:outline-offset-0 ' +
+  'aria-invalid:border-danger [&:not(textarea)]:h-13 [&:is(textarea)]:py-3';
 
+/** Etiqueta asociada al control (A8): el id sale del `name` del control,
+ *  que no cambia (C8). También inyecta aria-invalid/describedby. */
 function Field({
   label,
   required,
@@ -119,13 +126,37 @@ function Field({
   error?: string;
   children: React.ReactNode;
 }) {
+  const kids = React.Children.toArray(children);
+  const idx = kids.findIndex(
+    (k) => React.isValidElement<{ name?: string }>(k) && !!k.props.name,
+  );
+  const ctrl = idx >= 0 ? (kids[idx] as React.ReactElement<{ name: string }>) : null;
+  const id = ctrl?.props.name;
+  const errorId = error && id ? `${id}-error` : undefined;
+  if (ctrl) {
+    kids[idx] = React.cloneElement(ctrl as React.ReactElement<Record<string, unknown>>, {
+      id,
+      'aria-invalid': error ? true : undefined,
+      'aria-describedby': errorId,
+      'aria-required': required || undefined,
+    });
+  }
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label} {required && '*'}
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-sm font-bold text-ink">
+        {label}
+        {required && (
+          <span aria-hidden="true" className="text-danger">
+            {' *'}
+          </span>
+        )}
       </label>
-      {children}
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {kids}
+      {error && (
+        <p id={errorId} className="text-[13px] font-bold text-danger">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -142,13 +173,13 @@ function Check({
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <label className="flex items-center gap-2 text-sm text-gray-700">
+    <label className="flex min-h-11 items-center gap-3 text-[15px] font-bold text-ink">
       <input
         type="checkbox"
         name={name}
         checked={checked}
         onChange={onChange}
-        className="h-4 w-4 accent-blue-600"
+        className="size-5 flex-none accent-brand"
       />
       {label}
     </label>
@@ -169,20 +200,36 @@ const RAMA_OPTIONS = [
 // Ramas que habilitan los roles internos (Responsable/Asistente de Rama)
 const RAMAS_CON_ROLES = ['Manada', 'Scouts', 'Caminantes', 'Clan Rover'];
 
+// Los nombres de paso son los de las pestañas anteriores: las pruebas
+// navegan por ellos (A7).
 const TABS = [
-  { id: 'ficha', label: 'Ficha' },
-  { id: 'personales', label: 'Datos Personales' },
-  { id: 'seguro', label: 'Seguro / Emergencia' },
-  { id: 'medicos', label: 'Datos Médicos' },
-  { id: 'trayectoria', label: 'Trayectoria Scout' },
-  { id: 'documentos', label: 'Documentos' },
-  { id: 'firma', label: 'Firmas' },
+  { id: 'ficha', label: 'Ficha', description: 'Tipo de ficha y rama o cargo en el grupo.' },
+  { id: 'personales', label: 'Datos Personales', description: 'Datos de la persona voluntaria.' },
+  { id: 'seguro', label: 'Seguro / Emergencia', description: 'Seguro médico y a quién avisar en una emergencia.' },
+  { id: 'medicos', label: 'Datos Médicos', description: 'Para cuidar tu salud durante las actividades.' },
+  { id: 'trayectoria', label: 'Trayectoria Scout', description: 'Tu experiencia previa en el movimiento scout.' },
+  { id: 'documentos', label: 'Documentos', description: 'Marca los documentos que ya entregaste.' },
+  { id: 'firma', label: 'Firmas', description: 'La firma del dirigente es obligatoria para enviar.' },
 ] as const;
+
+// Qué errores pertenecen a cada paso (E1 y E3). Generado de los campos
+// de cada paso.
+const STEP_KEYS: Record<string, readonly string[]> = {
+  ficha: ['fecha_ficha', 'tipo_ficha', 'rama', 'responsable_rama', 'asistente_rama', 'cargo'],
+  personales: ['nombre_completo', 'dui', 'email', 'fecha_nacimiento', 'telefono_celular', 'sexo', 'direccion', 'ciudad', 'departamento', 'lugar_nacimiento', 'nis', 'telefono_casa', 'telefono_oficina', 'religion', 'estado_civil', 'profesion', 'lugar_trabajo', 'tipo_sangre', 'grupo_familiar'],
+  seguro: ['aseguradora_nombre', 'aseguradora_afiliacion', 'seguro_vigencia', 'seguro_suma_asegurada', 'seguro_cobertura_internacional', 'emergencia_avisar_a', 'emergencia_telefono'],
+  medicos: ['hipertenso', 'diabetico_insulina', 'enfermedad_pulmonar_asma', 'del_corazon', 'convulsion', 'operado_ultimo_ano', 'alergico_a', 'medicamentos_permanentes', 'tratamiento_actual', 'discapacidad', 'operado_que', 'emergencia_trasladar_a', 'regimen_alimenticio_especial', 'es_propenso_a', 'ha_padecido_de', 'observaciones_adicionales'],
+  trayectoria: ['grupos_previos', 'formacion_scout', 'referencias'],
+  documentos: ['foto_reciente', 'primeros_auxilios', 'fotocopia_dui', 'uniforme', 'evaluacion_psicologica', 'constancia_pnc', 'curriculum_vitae', 'ficha_medica_ases'],
+  firma: ['firma', 'firma_dirigente'],
+};
+
 
 const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
   initialData = {},
   onSubmit,
   isLoading = false,
+  serverErrors,
 }) => {
   const [formData, setFormData] = useState<FormDataAdulto>({
     nombre_completo: '',
@@ -215,7 +262,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<string>('personales');
 
-  const validateForm = (): boolean => {
+  const collectErrors = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.nombre_completo.trim())
@@ -239,24 +286,47 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
     if (!formData.firma_dirigente?.trim())
       newErrors.firma = 'La firma del dirigente es obligatoria';
 
-    setErrors(newErrors);
+    return newErrors;
+  };
 
-    // Como el botón de envío solo vive en "Firmas", llevamos al usuario
-    // a la pestaña del primer error para que no parezca que no pasa nada.
-    const tabDeErrores: Array<[string, string[]]> = [
-      [
-        'personales',
-        ['nombre_completo', 'dui', 'email', 'fecha_nacimiento', 'telefono_celular'],
-      ],
-      ['seguro', ['seguro_suma_asegurada']],
-      ['firma', ['firma']],
-    ];
-    const primeraTab = tabDeErrores.find(([, claves]) =>
-      claves.some((k) => newErrors[k])
-    )?.[0];
-    if (primeraTab) setActiveTab(primeraTab);
+  const [focusKey, setFocusKey] = useState(0);
 
-    return Object.keys(newErrors).length === 0;
+  const showErrors = (e: Record<string, string>) => {
+    setErrors(e);
+    const step = firstStepWithError(TABS, STEP_KEYS, e);
+    if (step) setActiveTab(step);
+    setFocusKey((k) => k + 1);
+  };
+
+  // E3: errores que solo detecta el servidor → se abre su paso.
+  // Se ajusta el estado durante el render al cambiar la prop (patrón de
+  // React para derivar estado de props, sin efecto).
+  const [prevServerErrors, setPrevServerErrors] = useState(serverErrors);
+  if (serverErrors !== prevServerErrors) {
+    setPrevServerErrors(serverErrors);
+    const e: Record<string, string> = {};
+    for (const [k, msgs] of Object.entries(serverErrors ?? {})) if (msgs?.[0]) e[k] = msgs[0];
+    if (Object.keys(e).length) {
+      setErrors(e);
+      const step = firstStepWithError(TABS, STEP_KEYS, e);
+      if (step) setActiveTab(step);
+      setFocusKey((k) => k + 1);
+    }
+  }
+
+  // E1: "Siguiente" solo avanza si el paso actual no tiene errores.
+  const handleNext = () => {
+    const all = collectErrors();
+    const mine = Object.fromEntries(
+      Object.entries(all).filter(([k]) => STEP_KEYS[activeTab]?.includes(k)),
+    );
+    if (Object.keys(mine).length) {
+      setErrors((prev) => ({ ...prev, ...mine }));
+      setFocusKey((k) => k + 1);
+      return;
+    }
+    const i = TABS.findIndex((t) => t.id === activeTab);
+    setActiveTab(TABS[Math.min(i + 1, TABS.length - 1)].id);
   };
 
   const handleChange = (
@@ -314,7 +384,12 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    const all = collectErrors();
+    if (Object.keys(all).length) {
+      showErrors(all);
+      return;
+    }
+    setErrors({});
     try {
       await onSubmit(formData);
     } catch (error) {
@@ -334,32 +409,19 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
   const esComite = ramaValue.toLowerCase().includes('comit');
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-900">
-        Ficha de Adultos Voluntarios - Grupo Scout No. 1 &quot;Los Intrépidos&quot;
-      </h1>
-
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b overflow-x-auto">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 font-medium border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === tab.id
-                ? 'text-blue-600 border-blue-600'
-                : 'text-gray-600 border-transparent hover:text-gray-900'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
+    <form onSubmit={handleSubmit} noValidate>
+      <FichaShell
+        title="Ficha de Adultos Voluntarios"
+        steps={TABS}
+        current={activeTab}
+        onStepChange={setActiveTab}
+        onNext={handleNext}
+        isLoading={isLoading}
+        focusKey={focusKey}
+      >
       {/* Tab: Control de ficha */}
       {activeTab === 'ficha' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Fecha de ficha">
             <input
               type="date"
@@ -401,11 +463,11 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
           {/* Rama con roles internos (Manada/Scouts/Caminantes/Clan Rover):
               solo se muestran los checkboxes de rol */}
           {esRamaConRoles && (
-            <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold mb-3 text-gray-900">
+            <div className="rounded-card bg-canvas p-4 sm:col-span-2">
+              <h3 className="mb-2 text-[13px] font-extrabold tracking-wider text-muted uppercase">
                 Rol en la rama
               </h3>
-              <div className="flex flex-wrap gap-6">
+              <div className="flex flex-wrap gap-x-6">
                 <Check
                   label="Responsable de Rama"
                   name="responsable_rama"
@@ -439,14 +501,14 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
 
       {/* Tab: Datos personales */}
       {activeTab === 'personales' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Nombre Completo" required error={errors.nombre_completo}>
             <input
               type="text"
               name="nombre_completo"
               value={formData.nombre_completo}
               onChange={handleChange}
-              className={inputCls(errors.nombre_completo)}
+              className={inputCls()}
             />
           </Field>
           <Field label="DUI" required error={errors.dui}>
@@ -456,7 +518,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
               placeholder="XXXXXXXX-X"
               value={formData.dui}
               onChange={handleChange}
-              className={inputCls(errors.dui)}
+              className={inputCls()}
             />
           </Field>
           <Field label="Email" required error={errors.email}>
@@ -465,7 +527,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className={inputCls(errors.email)}
+              className={inputCls()}
             />
           </Field>
           <Field
@@ -478,7 +540,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
               name="fecha_nacimiento"
               value={formData.fecha_nacimiento}
               onChange={handleChange}
-              className={inputCls(errors.fecha_nacimiento)}
+              className={inputCls()}
             />
           </Field>
           <Field
@@ -491,7 +553,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
               name="telefono_celular"
               value={formData.telefono_celular}
               onChange={handleChange}
-              className={inputCls(errors.telefono_celular)}
+              className={inputCls()}
             />
           </Field>
           <Field label="Sexo">
@@ -625,7 +687,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
               ))}
             </select>
           </Field>
-          <div className="md:col-span-2">
+          <div className="sm:col-span-2">
             <Field label="Grupo familiar (una persona por línea)">
               <textarea
                 name="grupo_familiar"
@@ -643,7 +705,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
 
       {/* Tab: Seguro / emergencia */}
       {activeTab === 'seguro' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Aseguradora">
             <input
               type="text"
@@ -679,10 +741,10 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
               name="seguro_suma_asegurada"
               value={txt(formData.seguro_suma_asegurada)}
               onChange={handleChange}
-              className={inputCls(errors.seguro_suma_asegurada)}
+              className={inputCls()}
             />
           </Field>
-          <div className="flex items-end pb-2">
+          <div className="flex items-end">
             <Check
               label="Cobertura internacional"
               name="seguro_cobertura_internacional"
@@ -713,12 +775,12 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
 
       {/* Tab: Datos médicos */}
       {activeTab === 'medicos' && (
-        <div className="space-y-4 mb-6">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-4 text-gray-900">
+        <div className="flex flex-col gap-4">
+          <div className="rounded-card bg-canvas p-4">
+            <h3 className="mb-2 text-[13px] font-extrabold tracking-wider text-muted uppercase">
               Condiciones médicas
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
               <Check
                 label="Hipertenso"
                 name="hipertenso"
@@ -757,7 +819,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Alérgico a">
               <textarea
                 name="alergico_a"
@@ -854,7 +916,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
 
       {/* Tab: Trayectoria scout */}
       {activeTab === 'trayectoria' && (
-        <div className="space-y-4 mb-6">
+        <div className="flex flex-col gap-4">
           <Field label="Grupos previos (uno por línea)">
             <textarea
               name="grupos_previos"
@@ -891,11 +953,11 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
 
       {/* Tab: Documentos */}
       {activeTab === 'documentos' && (
-        <div className="bg-gray-50 p-4 rounded-lg mb-6">
-          <h3 className="font-semibold mb-4 text-gray-900">
+        <div className="rounded-card bg-canvas p-4">
+          <h3 className="mb-2 text-[13px] font-extrabold tracking-wider text-muted uppercase">
             Checklist de documentos entregados
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
             <Check
               label="Foto reciente"
               name="foto_reciente"
@@ -950,11 +1012,9 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
 
       {/* Tab: Firmas */}
       {activeTab === 'firma' && (
-        <div className="space-y-6 mb-6">
+        <div className="flex flex-col gap-5">
           {errors.firma && (
-            <p className="text-red-500 text-sm bg-red-50 border border-red-200 px-3 py-2 rounded">
-              {errors.firma}
-            </p>
+            <StepError>{errors.firma}</StepError>
           )}
           <div>
             <SignaturePad
@@ -966,7 +1026,7 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
               error={errors.firma}
             />
             {formData.firma_dirigente && (
-              <p className="text-green-600 text-sm mt-2">
+              <p className="mt-2 text-sm font-bold text-ok">
                 ✓ Firma capturada correctamente
               </p>
             )}
@@ -974,23 +1034,8 @@ const FormularioAdulto: React.FC<FormularioAdultoProps> = ({
         </div>
       )}
 
-      {/* Botones: solo visibles en la pestaña de Firmas para evitar
-          que se envíe el formulario sin completar el resto */}
-      {activeTab === 'firma' && (
-        <div className="flex gap-4 mt-8">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium"
-          >
-            {isLoading ? 'Enviando...' : 'Enviar Formulario'}
-          </button>
-        </div>
-      )}
-
-      {errors.submit && (
-        <p className="text-red-500 mt-4">{errors.submit}</p>
-      )}
+      {errors.submit && <StepError>{errors.submit}</StepError>}
+      </FichaShell>
     </form>
   );
 };

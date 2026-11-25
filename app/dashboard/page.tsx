@@ -1,6 +1,11 @@
-// app/dashboard/page.tsx
+// app/dashboard/page.tsx — Inicio de la familia (tablero 2 · Inicio familia)
+import Link from 'next/link';
 import React from 'react';
+import { InscripcionesList, INSCRIPCION_SELECT, toItems } from '@/components/familia/InscripcionesList';
+import { PERIODO } from '@/components/familia/textos';
 import { createClient } from '@/lib/supabase-server';
+
+const RECIENTES = 3;
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -8,60 +13,79 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
   const { data: roleData } = user
-    ? await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single()
+    ? await supabase.from('user_roles').select('role').eq('user_id', user.id).single()
     : { data: null };
   const isAdmin = roleData?.role === 'admin';
 
+  const { data: rows, error } = await supabase
+    .from('inscriptions')
+    .select(INSCRIPCION_SELECT)
+    .eq('user_id', user?.id)
+    .order('created_at', { ascending: false });
+  const items = toItems(rows);
+
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Bienvenido!</h2>
-      <p className="text-gray-600 mb-8">¿Qué deseas hacer hoy?</p>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-0.5">
+        <span className="text-sm text-muted">{PERIODO}</span>
+        <h1 className="m-0 text-2xl font-extrabold">¡Bienvenido!</h1>
+      </div>
+
+      <Link
+        href="/dashboard/nuevo-formulario"
+        className="flex items-center gap-4 rounded-panel bg-brand p-5 text-on-brand no-underline transition-colors hover:bg-brand-hover"
+      >
+        <span className="flex size-12 flex-none items-center justify-center rounded-control bg-on-brand/15">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </span>
+        <span className="flex flex-1 flex-col gap-0.5">
+          <span className="text-[17px] font-extrabold">Nueva inscripción</span>
+          <span className="text-sm text-on-brand-muted">Un beneficiario o un adulto voluntario</span>
+        </span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+      </Link>
 
       {isAdmin && (
-        <a
+        <Link
           href="/admin"
-          className="block bg-gray-900 text-white rounded-xl p-6 mb-6 hover:bg-gray-800 transition-colors shadow-sm"
+          className="flex items-center justify-between gap-3 rounded-card bg-brand-soft p-4 text-brand no-underline hover:bg-line"
         >
-          <div className="text-3xl mb-2">🛡️</div>
-          <h3 className="text-lg font-bold mb-1">Panel Administrativo</h3>
-          <p className="text-gray-300 text-sm">
-            Ver todos los inscritos, filtrar por año y rama, editar registros
-            y aprobar inscripciones →
-          </p>
-        </a>
+          <span className="flex flex-col gap-0.5">
+            <span className="text-base font-extrabold">Panel administrativo</span>
+            <span className="text-sm text-ink-soft">Revisar, aprobar y exportar las fichas del grupo</span>
+          </span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </Link>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <a
-          href="/dashboard/nuevo-formulario"
-          className="bg-white border-2 border-blue-200 hover:border-blue-500 rounded-xl p-8 text-center transition-colors shadow-sm hover:shadow-md"
-        >
-          <div className="text-5xl mb-4">📝</div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">
-            Nuevo Formulario
-          </h3>
-          <p className="text-gray-600 text-sm">
-            Llena una nueva ficha de inscripción (Adulto o Beneficiario)
-          </p>
-        </a>
+      <section className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between">
+          <h2 className="m-0 text-[17px] font-extrabold">Tus inscripciones</h2>
+          {items.length > 0 && <span className="text-sm text-muted">{items.length}</span>}
+        </div>
 
-        <a
-          href="/dashboard/mis-inscripciones"
-          className="bg-white border-2 border-green-200 hover:border-green-500 rounded-xl p-8 text-center transition-colors shadow-sm hover:shadow-md"
-        >
-          <div className="text-5xl mb-4">📋</div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">
-            Mis Inscripciones
-          </h3>
-          <p className="text-gray-600 text-sm">
-            Consulta el estado de tus fichas ya enviadas
+        {error && <p role="alert" className="m-0 text-sm font-bold text-danger">Error al cargar inscripciones.</p>}
+
+        {!error && items.length === 0 && (
+          <p className="m-0 rounded-card bg-surface p-6 text-center text-[15px] text-muted shadow-card">
+            Aún no tienes inscripciones. Empieza con «Nueva inscripción».
           </p>
-        </a>
-      </div>
+        )}
+
+        {items.length > 0 && <InscripcionesList items={items.slice(0, RECIENTES)} label="Tus inscripciones recientes" />}
+
+        {items.length > RECIENTES && (
+          <Link href="/dashboard/mis-inscripciones" className="flex min-h-11 items-center justify-center rounded-control text-sm font-extrabold text-brand hover:bg-brand-soft">
+            Ver todas ({items.length})
+          </Link>
+        )}
+      </section>
     </div>
   );
 }

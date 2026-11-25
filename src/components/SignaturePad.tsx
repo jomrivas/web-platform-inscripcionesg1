@@ -1,5 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 
+// Colores del canvas desde los tokens de diseño (spec 005, A1).
+const token = (name: string, fallback: string) =>
+  (typeof window !== 'undefined' &&
+    getComputedStyle(document.documentElement).getPropertyValue(name).trim()) ||
+  fallback;
+
 interface SignaturePadProps {
   onSignatureCapture: (data: string, type: 'canvas' | 'image') => void;
   label?: string;
@@ -34,7 +40,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Borde
-    ctx.strokeStyle = '#ccc';
+    ctx.strokeStyle = token('--color-line', 'gainsboro');
     ctx.lineWidth = 2;
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
   }, [mode]);
@@ -83,7 +89,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#000';
+    ctx.strokeStyle = token('--color-ink', 'black');
     ctx.lineTo(x, y);
     ctx.stroke();
 
@@ -116,7 +122,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#000';
+    ctx.strokeStyle = token('--color-ink', 'black');
     ctx.lineTo(x, y);
     ctx.stroke();
     setIsEmpty(false);
@@ -144,7 +150,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
 
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#ccc';
+    ctx.strokeStyle = token('--color-line', 'gainsboro');
     ctx.lineWidth = 2;
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
     setIsEmpty(true);
@@ -173,39 +179,41 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     reader.readAsDataURL(file);
   };
 
-  return (
-    <div className="signature-pad-container p-4 border rounded-lg bg-gray-50">
-      <label className="block text-sm font-semibold mb-3">{label}</label>
+  const modeBtn = (active: boolean) =>
+    `h-11 rounded-[10px] px-3.5 text-sm transition-colors ${
+      active
+        ? 'bg-surface font-extrabold text-brand shadow-card'
+        : 'font-bold text-ink-soft hover:text-ink'
+    }`;
 
-      {/* Selector de modo */}
-      <div className="flex gap-4 mb-4">
-        <button
-          type="button"
-          onClick={() => setMode('canvas')}
-          className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-            mode === 'canvas'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          ✏️ Dibujar
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode('upload')}
-          className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-            mode === 'upload'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          📁 Subir imagen
-        </button>
+  return (
+    <div className="signature-pad-container flex flex-col gap-3 rounded-card border-[1.5px] border-line bg-surface p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="text-[15px] font-extrabold">{label}</span>
+        {/* Selector de modo */}
+        <div className="flex gap-1 rounded-xl bg-canvas p-1">
+          <button
+            type="button"
+            onClick={() => setMode('canvas')}
+            aria-pressed={mode === 'canvas'}
+            className={modeBtn(mode === 'canvas')}
+          >
+            Dibujar
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('upload')}
+            aria-pressed={mode === 'upload'}
+            className={modeBtn(mode === 'upload')}
+          >
+            Subir imagen
+          </button>
+        </div>
       </div>
 
       {/* Modo Canvas */}
       {mode === 'canvas' && (
-        <div>
+        <div className="flex flex-col gap-3">
           <canvas
             ref={canvasRef}
             onMouseDown={startDrawing}
@@ -215,21 +223,23 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
             onTouchStart={startTouch}
             onTouchMove={drawTouch}
             onTouchEnd={stopDrawing}
-            className="border-2 border-gray-300 rounded cursor-crosshair bg-white w-full touch-none"
+            aria-label={`${label}: firma con el dedo o el mouse dentro del recuadro`}
+            className="w-full cursor-crosshair touch-none rounded-control border-[1.5px] border-dashed border-on-brand-muted bg-canvas"
             style={{ maxWidth: '100%', height: 'auto' }}
           />
-          <div className="flex gap-2 mt-3">
+          <p className="text-[13px] text-muted">Firma con el dedo dentro del recuadro y toca «Guardar firma».</p>
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={clearCanvas}
-              className="px-3 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+              className="h-11 rounded-control border-[1.5px] border-line bg-surface text-sm font-extrabold text-ink-soft hover:bg-canvas"
             >
               Limpiar
             </button>
             <button
               type="button"
               onClick={saveSignature}
-              className="px-3 py-2 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+              className="h-11 rounded-control bg-brand text-sm font-extrabold text-on-brand hover:bg-brand-hover"
             >
               Guardar firma
             </button>
@@ -239,7 +249,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
 
       {/* Modo Upload */}
       {mode === 'upload' && (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+        <div className="flex flex-col items-center gap-2 rounded-control border-[1.5px] border-dashed border-on-brand-muted bg-canvas p-6 text-center">
           <input
             ref={fileInputRef}
             type="file"
@@ -250,17 +260,15 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            className="h-11 rounded-control bg-brand px-5 text-sm font-extrabold text-on-brand hover:bg-brand-hover"
           >
             Seleccionar imagen de firma
           </button>
-          <p className="text-gray-500 text-sm mt-2">
-            Soporta: JPG, PNG, GIF
-          </p>
+          <p className="text-[13px] text-muted">Formatos: JPG, PNG o GIF</p>
         </div>
       )}
 
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      {error && <p className="text-[13px] font-bold text-danger">{error}</p>}
     </div>
   );
 };

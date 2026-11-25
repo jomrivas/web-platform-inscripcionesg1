@@ -4,7 +4,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
-import bgLogin from '@/bg_login_wpg1.jpeg';
+import Link from 'next/link';
+import { AuthFooter } from '@/components/familia/AuthFooter';
+import { AuthShell } from '@/components/familia/AuthShell';
+import { Button } from '@/components/ui/Button';
+import { Field, Input } from '@/components/ui/Field';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +18,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,74 +57,79 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat px-4"
-      style={{ backgroundImage: `url(${bgLogin.src})` }}
-    >
-      <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
-      <div className="relative z-10 max-w-md w-full bg-white p-8 rounded-lg shadow-md">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Grupo Scout No. 1 &quot;Los Intrépidos&quot;
-          </h1>
-          <p className="text-gray-600 mt-2">Sistema de Inscripciones</p>
-        </div>
+    <AuthShell>
+      <div className="flex flex-col gap-1">
+        <h1 className="m-0 text-[22px] font-extrabold lg:text-3xl lg:font-black lg:tracking-tight">Bienvenida, familia</h1>
+        <p className="m-0 text-[15px] leading-normal text-muted">
+          Ingresa para llenar o revisar tus fichas de inscripción.
+        </p>
+      </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Correo Electrónico
-            </label>
-            <input
+      <form onSubmit={handleLogin} method="post" className="flex flex-col gap-5">
+        <Field label="Correo electrónico" id="email">
+          {(a) => (
+            <Input
               type="email"
               name="email"
               autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
               placeholder="tu@correo.com"
+              {...a}
             />
-          </div>
+          )}
+        </Field>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-              placeholder="••••••••"
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
-              {error}
+        <Field label="Contraseña" id="password">
+          {(a) => (
+            <div className="relative flex">
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Tu contraseña"
+                className="pr-13"
+                {...a}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                aria-pressed={showPassword}
+                className="absolute top-1 right-1 flex size-11 items-center justify-center rounded-[10px] text-muted hover:bg-canvas"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+                  <circle cx="12" cy="12" r="3" />
+                  {showPassword && <path d="M4 4l16 16" />}
+                </svg>
+              </button>
             </div>
           )}
+        </Field>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium"
-          >
-            {loading ? 'Ingresando...' : 'Iniciar Sesión'}
-          </button>
-        </form>
+        {error && (
+          <p role="alert" className="m-0 rounded-control bg-danger-soft px-4 py-3 text-sm font-bold text-danger">
+            {error}
+          </p>
+        )}
 
-        <p className="text-center text-sm text-gray-600 mt-6">
-          ¿No tienes cuenta?{' '}
-          <a href="/signup" className="text-blue-600 hover:underline font-medium">
-            Regístrate aquí
-          </a>
-        </p>
-      </div>
-    </div>
+        <Button type="submit" size="lg" fullWidth disabled={loading}>
+          {loading ? 'Ingresando...' : 'Iniciar Sesión'}
+        </Button>
+      </form>
+
+      <p className="m-0 text-center text-[15px] text-muted">
+        ¿Primera vez aquí?{' '}
+        <Link href="/signup" className="inline-flex min-h-11 items-center font-extrabold text-brand no-underline hover:underline">
+          Crea tu cuenta
+        </Link>
+      </p>
+      <AuthFooter />
+    </AuthShell>
   );
 }

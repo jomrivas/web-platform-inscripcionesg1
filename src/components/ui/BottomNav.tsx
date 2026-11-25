@@ -12,8 +12,18 @@ export function isActive(pathname: string, item: Pick<NavItem, 'href' | 'exact'>
   return item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/');
 }
 
-export function BottomNav({ items, className }: { items: NavItem[]; className?: string }) {
+export function BottomNav({
+  items,
+  hiddenOn = [],
+  className,
+}: {
+  items: NavItem[];
+  /** Prefijos de ruta donde no se muestra (p. ej. dentro de una ficha). */
+  hiddenOn?: string[];
+  className?: string;
+}) {
   const pathname = usePathname();
+  if (hiddenOn.some((p) => pathname.startsWith(p))) return null;
   return (
     <nav
       aria-label="Navegación principal"

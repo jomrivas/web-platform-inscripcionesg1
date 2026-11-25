@@ -5,6 +5,7 @@
 import { z } from 'zod';
 
 const duiRegex = /^\d{8}-\d$/;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Los campos opcionales vacíos se guardan como NULL (no como ""): así no
 // chocan con NOT NULL / CHECK constraints de la base (p. ej. columnas con
@@ -195,6 +196,19 @@ export const beneficiarioSchema = z
         path: ['tutor'],
         message: 'Debes ingresar al menos un tutor (madre o padre)',
       });
+    }
+    // R9 (spec 005): cada tutor registrado lleva su correo, y debe ser válido.
+    for (const [nombre, email, requerido] of [
+      ['madre_nombre', 'madre_email', 'El correo de la madre o tutora es requerido'],
+      ['padre_nombre', 'padre_email', 'El correo del padre o tutor es requerido'],
+    ] as const) {
+      if (!val[nombre]?.trim()) continue;
+      const correo = val[email]?.trim() || '';
+      if (!correo) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: [email], message: requerido });
+      } else if (!emailRegex.test(correo)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: [email], message: 'Correo inválido' });
+      }
     }
     const firmaPadre = val.firma_padre_tutor?.trim() || '';
     const firmaMadre = val.firma_madre_tutora?.trim() || '';

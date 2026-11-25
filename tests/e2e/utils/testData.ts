@@ -35,4 +35,6 @@ export const beneficiarioData = {
   telefono_celular: '7000-1111',
   tipo_sangre: 'A+',
   madre_nombre: `${E2E_PREFIX}Maria Rivas`,
+  // R9 (spec 005): cada tutor registrado lleva su correo
+  madre_email: 'e2e.madre@gruposcout1.test',
 };

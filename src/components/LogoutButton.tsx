@@ -3,8 +3,9 @@
 
 import { createClient } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { cx } from './ui/cx';
 
-export default function LogoutButton() {
+export default function LogoutButton({ className }: { className?: string }) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -16,8 +17,12 @@ export default function LogoutButton() {
 
   return (
     <button
+      type="button"
       onClick={handleLogout}
-      className="text-sm text-gray-600 hover:text-red-600 font-medium transition-colors"
+      className={cx(
+        'flex min-h-11 items-center rounded-xl px-3 text-sm font-bold text-ink-soft transition-colors hover:bg-danger-soft hover:text-danger',
+        className,
+      )}
     >
       Cerrar sesión
     </button>

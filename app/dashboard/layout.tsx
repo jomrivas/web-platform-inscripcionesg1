@@ -4,7 +4,7 @@
 import React from 'react';
 import { createClient } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
-import LogoutButton from '@/components/LogoutButton';
+import { FamilyFrame } from '@/components/familia/FamilyFrame';
 
 export default async function DashboardLayout({
   children,
@@ -30,29 +30,8 @@ export default async function DashboardLayout({
   const isAdmin = roleData?.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="font-bold text-gray-900">
-              Grupo Scout No. 1 &quot;Los Intrépidos&quot;
-            </h1>
-            <p className="text-xs text-gray-500">{user.email}</p>
-          </div>
-          <div className="flex items-center gap-4">
-            {isAdmin && (
-              <a
-                href="/admin"
-                className="text-sm text-blue-600 hover:underline font-medium"
-              >
-                Panel Admin
-              </a>
-            )}
-            <LogoutButton />
-          </div>
-        </div>
-      </header>
-      <main className="max-w-5xl mx-auto px-4 py-8">{children}</main>
-    </div>
+    <FamilyFrame email={user.email ?? ''} isAdmin={isAdmin}>
+      {children}
+    </FamilyFrame>
   );
 }

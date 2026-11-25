@@ -24,7 +24,7 @@ type FieldProps = {
     id: string;
     'aria-invalid': boolean | undefined;
     'aria-describedby': string | undefined;
-    required: boolean | undefined;
+    'aria-required': boolean | undefined;
   }) => ReactNode;
 };
 
@@ -44,12 +44,19 @@ export function Field({ label, id, hint, error, required, className, children }:
     <div className={cx('flex flex-col gap-1.5', className)}>
       <label htmlFor={ctrlId} className="text-sm font-bold text-ink">
         {label}
+        {required && (
+          <span aria-hidden="true" className="text-danger">
+            {' *'}
+          </span>
+        )}
       </label>
       {children({
         id: ctrlId,
         'aria-invalid': error ? true : undefined,
         'aria-describedby': describedBy,
-        required,
+        // aria-required y no `required`: la validación la hace la app (y el
+        // servidor), sin la burbuja nativa del navegador.
+        'aria-required': required || undefined,
       })}
       {error ? (
         <p id={errorId} className="flex items-start gap-1.5 text-[13px] font-bold text-danger">

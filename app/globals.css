@@ -58,35 +58,50 @@
   --font-sans: var(--font-nunito), system-ui, sans-serif;
 }
 
-:root {
-  /* La app está diseñada solo en modo claro: evita que el navegador
-     oscurezca controles nativos (date picker, scrollbars, etc.) */
-  color-scheme: light;
+/* Estilos base en @layer base: así las clases de Tailwind (utilities)
+   siempre pueden sobrescribirlos. */
+@layer base {
+  :root {
+    /* La app está diseñada solo en modo claro: evita que el navegador
+       oscurezca controles nativos (date picker, scrollbars, etc.) */
+    color-scheme: light;
+  }
+
+  body {
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  /* Los controles no heredan el color del body: se fija tinta explícita
+     para que el texto nunca quede invisible sobre el fondo blanco. */
+  input,
+  textarea,
+  select {
+    color: var(--color-ink);
+    background-color: var(--color-surface);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-muted); /* 5.9:1, cumple R3 */
+    opacity: 1;
+  }
+
+  /* Foco visible y consistente en toda la app (teclado). */
+  :focus-visible {
+    outline: 3px solid var(--color-brand);
+    outline-offset: 2px;
+  }
 }
 
-body {
-  background: var(--color-surface);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-}
-
-/* Los controles no heredan el color del body: se fija tinta explícita
-   para que el texto nunca quede invisible sobre el fondo blanco. */
-input,
-textarea,
-select {
-  color: var(--color-ink);
-  background-color: var(--color-surface);
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: var(--color-muted); /* 5.9:1, cumple R3 */
-  opacity: 1;
-}
-
-/* Foco visible y consistente en toda la app (teclado). */
-:focus-visible {
-  outline: 3px solid var(--color-brand);
-  outline-offset: 2px;
+/* Franja decorativa con los cuatro colores de rama (portada e ingreso). */
+.franja-ramas {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-manada) 0 48px,
+    var(--color-unidad) 48px 96px,
+    var(--color-caminantes) 96px 144px,
+    var(--color-rover) 144px 192px
+  );
 }
